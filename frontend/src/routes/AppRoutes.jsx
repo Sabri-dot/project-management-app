@@ -7,6 +7,7 @@ import AllProjects from "../pages/Projects/AllProjects";
 import AllTasks from "../pages/Tasks/AllTasks";
 import MyTasks from "../pages/Tasks/MyTasks";
 import Profile from "../pages/Profile/Profile";
+import AdminDashboard from "../pages/Admin/AdminDashboard";
 
 function AppRoutes() {
   return (
@@ -46,6 +47,10 @@ function AppRoutes() {
           path="/profile"
           element={<Profile />}
         />
+        <Route
+  path="/admin"
+  element={<AdminDashboard />}
+/>
 
       </Routes>
     </BrowserRouter>

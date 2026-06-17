@@ -14,6 +14,7 @@ const {
   getAllUsers,
   getAllProjects,
   getAllTasks,
+  getAdminDashboard,
 } = require(
   "../controllers/adminController"
 );
@@ -37,6 +38,12 @@ router.get(
   verifyToken,
   adminMiddleware,
   getAllTasks
+);
+router.get(
+  "/dashboard",
+  verifyToken,
+  adminMiddleware,
+  getAdminDashboard
 );
 
 module.exports =
