@@ -131,11 +131,12 @@ function Dashboard() {
 
         <div className="col-lg-8">
 
-          <ActiveProjects
-            projects={
-              dashboardData.activeProjects
-            }
-          />
+         <ActiveProjects
+  projects={
+    dashboardData.activeProjects
+  }
+  isAdmin={false}
+/>
 
         </div>
 

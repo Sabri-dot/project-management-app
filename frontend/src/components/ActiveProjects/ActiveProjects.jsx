@@ -1,6 +1,9 @@
 import { useState } from "react";
 
-function ActiveProjects({ projects = [] }) {
+function ActiveProjects({
+  projects = [],
+  isAdmin = false,
+}) {
   const [showModal, setShowModal] =
     useState(false);
 
@@ -22,7 +25,12 @@ function ActiveProjects({ projects = [] }) {
 
   return (
     <>
-      <div className="bg-white border rounded-4 p-4 h-100 shadow-sm">
+      <div
+  className="bg-white rounded-4 p-4 h-100 shadow-sm"
+  style={{
+    border: "1px solid #eef2f7",
+  }}
+>
 
         <div className="d-flex justify-content-between align-items-center mb-4">
 
@@ -31,13 +39,13 @@ function ActiveProjects({ projects = [] }) {
           </h3>
 
           <button
-            className="btn btn-sm btn-outline-primary rounded-pill px-3"
-            onClick={() =>
-              setShowModal(true)
-            }
-          >
-            View All
-          </button>
+  className="btn btn-primary rounded-pill px-4"
+  onClick={() =>
+    setShowModal(true)
+  }
+>
+  View All
+</button>
 
         </div>
 
@@ -51,39 +59,69 @@ function ActiveProjects({ projects = [] }) {
             No active projects assigned.
           </div>
         ) : (
-          projects.slice(0, 3).map((project) => (
-            <div
-              key={project.id}
-              className="mb-4"
-            >
-              <div className="d-flex justify-content-between align-items-center mb-2">
+         projects.slice(0, 3).map((project) => (
+  <div
+    key={project.id}
+    className="rounded-4 p-4 mb-3 bg-light-subtle"
+style={{
+  border: "1px solid #e2e8f0",
+  transition: "0.3s",
+}}
+  >
+    <div className="d-flex justify-content-between align-items-start">
 
-                <h5 className="mb-0 fw-semibold">
-                  {project.title}
-                </h5>
+      <div>
 
-                <span className="fw-bold text-primary">
-                  {project.progress}%
-                </span>
+        <h5
+  className="fw-bold mb-2"
+  style={{
+    color: "#0f172a",
+  }}
+>
+  📁 {project.title}
+</h5>
 
-              </div>
+        <span className="badge bg-primary-subtle text-primary">
+          {project.status}
+        </span>
 
-              <div
-                className="progress"
-                style={{
-                  height: "10px",
-                  borderRadius: "20px",
-                }}
-              >
-                <div
-                  className="progress-bar"
-                  style={{
-                    width: `${project.progress}%`,
-                  }}
-                />
-              </div>
-            </div>
-          ))
+      </div>
+
+  <div className="text-end">
+  <h5 className="fw-bold text-primary mb-0">
+    {project.progress}%
+  </h5>
+
+  <small className="text-muted">
+    Completed
+  </small>
+</div>
+
+    </div>
+
+    <div className="mt-3">
+
+     <div
+  className="progress"
+  style={{
+    height: "10px",
+    borderRadius: "20px",
+  }}
+>
+<div
+  className="progress-bar"
+  style={{
+    width: `${project.progress}%`,
+    background:
+      "linear-gradient(90deg,#2563eb,#60a5fa)",
+  }}
+/>
+</div>
+
+    </div>
+
+  </div>
+))
         )}
 
       </div>
@@ -124,15 +162,21 @@ function ActiveProjects({ projects = [] }) {
             >
               <div className="d-flex justify-content-between align-items-center">
 
-                <div>
-                  <h2 className="fw-bold mb-1">
-                    My Projects
-                  </h2>
+               <div>
 
-                  <p className="mb-0 opacity-75">
-                    All projects assigned to you
-                  </p>
-                </div>
+  <h2 className="fw-bold mb-1">
+    {isAdmin
+      ? "📁 All Projects"
+      : "📁 My Projects"}
+  </h2>
+
+  <p className="mb-0 opacity-75">
+    {isAdmin
+      ? "All created projects in the system"
+      : "All projects assigned to you"}
+  </p>
+
+</div>
 
                 <button
                   className="btn btn-light rounded-pill px-4"
@@ -154,14 +198,15 @@ function ActiveProjects({ projects = [] }) {
                 </div>
               ) : (
                 projects.map((project) => (
-                  <div
-                    key={project.id}
-                    className="card border-0 shadow-sm mb-4"
-                    style={{
-                      borderRadius:
-                        "20px",
-                    }}
-                  >
+                <div
+  key={project.id}
+  className="card border-0 shadow-sm mb-4"
+  style={{
+    borderRadius: "24px",
+    background:
+      "linear-gradient(to bottom,#ffffff,#f8fafc)",
+  }}
+>
                     <div className="card-body p-4">
 
                      <div
@@ -191,9 +236,9 @@ function ActiveProjects({ projects = [] }) {
       minWidth: "120px",
     }}
   >
-    <h3 className="fw-bold text-primary mb-0">
-      {project.progress}%
-    </h3>
+   <h2 className="fw-bold text-primary mb-0">
+  {project.progress}%
+</h2>
 
     <small className="text-muted">
       Progress

@@ -1337,20 +1337,16 @@ const uploadAttachment =
         >
           <div className="d-flex align-items-center gap-3">
 
-   <img
+          <img
   src={
-    member.avatar &&
-    member.avatar.trim() !== ""
-      ? member.avatar
+    member.avatar
+      ? `http://localhost:5000/${member.avatar}`
       : `https://i.pravatar.cc/100?img=${member.id}`
   }
-  alt={member.full_name}
+  alt=""
   width="60"
   height="60"
   className="rounded-circle"
-  style={{
-    objectFit: "cover",
-  }}
 />
 
             <div>
