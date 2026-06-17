@@ -1,0 +1,22 @@
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+  font-family: Inter, sans-serif;
+}
+
+body{
+  background:#f8fafc;
+}
+
+.app-layout{
+  display:flex;
+}
+
+.main-content{
+  flex:1;
+}
+
+.page-content{
+  padding:30px;
+}

@@ -1,0 +1,66 @@
+.sidebar {
+  width: 280px;
+  background: #08122b;
+  color: white;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  border-bottom: 1px solid #1f2d50;
+}
+
+.logo-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: #2563eb;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+
+.menu {
+  padding: 5px 10px; /* ishte 20px 10px */
+  margin-top: -15px; /* e ngre pak me lart */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.menu a {
+  text-decoration: none;
+  color: white;
+  padding: 14px 18px;
+  border-radius: 14px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  font-size: 17px;
+}
+
+.menu a.active {
+  background: #2563eb;
+}
+
+.menu a:hover {
+  background: #172554;
+}
+
+.logout-btn {
+  margin: 20px;
+  border: none;
+  background: transparent;
+  color: white;
+  display: flex;
+  gap: 10px;
+  font-size: 17px;
+  cursor: pointer;
+}

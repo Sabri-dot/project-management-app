@@ -1,0 +1,24 @@
+.dashboard-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.dashboard-header h1{
+  font-size:42px;
+}
+
+.dashboard-header p{
+  color:#64748b;
+  margin-top:10px;
+}
+
+.new-project-btn{
+  background:#2563eb;
+  color:white;
+  border:none;
+  padding:15px 25px;
+  border-radius:14px;
+  font-size:16px;
+  cursor:pointer;
+}
