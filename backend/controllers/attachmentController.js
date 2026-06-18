@@ -113,13 +113,18 @@ members.forEach((member) => {
     ]
   );
 
-  // 🔥 REAL TIME
+  //  REAL TIME
   io.to(`user_${member.user_id}`).emit("notification", {
     message: `New attachment added to "${task.title}"`,
     type: "attachment",
     createdAt: new Date(),
   });
 
+});
+io.to("admins").emit("notification", {
+  message: `New attachment added to "${task.title}"`,
+  type: "attachment",
+  createdAt: new Date(),
 });
 
                 }

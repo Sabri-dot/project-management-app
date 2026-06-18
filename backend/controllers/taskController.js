@@ -200,6 +200,12 @@ WHERE id = ?
                     createdAt: new Date(),
                   });
                 });
+                io.to("admins").emit("notification", {
+  message: `Task "${task.title}" was completed`,
+  type: "task_done",
+  createdAt: new Date(),
+});
+                
               }
             }
           );

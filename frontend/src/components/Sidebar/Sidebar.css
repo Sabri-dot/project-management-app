@@ -64,3 +64,41 @@
   font-size: 17px;
   cursor: pointer;
 }
+.menu-section-dropdown {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  cursor: pointer;
+
+  padding: 12px 14px;
+
+  margin-top: 18px;
+
+  font-size: 12px;
+  font-weight: 700;
+
+  text-transform: uppercase;
+  letter-spacing: 1px;
+
+  color: #94a3b8;
+
+  transition: 0.2s;
+}
+
+.menu-section-dropdown:hover {
+  color: #2563eb;
+}
+
+.sidebar {
+  overflow-y: auto;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 20px;
+}

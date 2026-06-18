@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+
+
 import {
   Link,
   useLocation,
@@ -23,11 +25,25 @@ function Sidebar() {
 
   const navigate =
     useNavigate();
+    const user = JSON.parse(
+  localStorage.getItem("user")
+);
 
   const [
     showLogoutModal,
     setShowLogoutModal,
   ] = useState(false);
+  const [adminOpen, setAdminOpen] =
+  useState(false);
+
+const [projectsOpen, setProjectsOpen] =
+  useState(false);
+
+const [collabOpen, setCollabOpen] =
+  useState(false);
+
+const [systemOpen, setSystemOpen] =
+  useState(false);
 
   const handleLogout =
     () => {
@@ -48,7 +64,13 @@ function Sidebar() {
 
     <>
 
-      <div className="sidebar">
+     <div
+  className="sidebar"
+  style={{
+    overflowY: "auto",
+    height: "100vh",
+  }}
+>
 
         <div className="logo">
 
@@ -62,74 +84,254 @@ function Sidebar() {
 
         </div>
 
-        <div className="menu">
+      <div className="menu">
 
-          <Link
-            to="/dashboard"
-            className={
-              location.pathname ===
-              "/dashboard"
-                ? "active"
-                : ""
-            }
-          >
-            <MdDashboard />
-            Dashboard
-          </Link>
+  {/* DASHBOARD */}
 
-          <Link
-            to="/projects"
-            className={
-              location.pathname ===
-              "/projects"
-                ? "active"
-                : ""
-            }
-          >
-            <MdFolder />
-            All Projects
-          </Link>
+  <Link
+    to={user?.role === "admin" ? "/admin" : "/dashboard"}
+    className={
+      location.pathname === "/dashboard" ||
+      location.pathname === "/admin"
+        ? "active"
+        : ""
+    }
+  >
+    <MdDashboard />
+    Dashboard
+  </Link>
 
-          <Link
-            to="/tasks"
-            className={
-              location.pathname ===
-              "/tasks"
-                ? "active"
-                : ""
-            }
-          >
-            <MdTask />
-            All Tasks
-          </Link>
+  {user?.role === "admin" ? (
 
-          <Link
-            to="/mytasks"
-            className={
-              location.pathname ===
-              "/mytasks"
-                ? "active"
-                : ""
-            }
-          >
-            <MdTask />
-            My Tasks
-          </Link>
+    <>
 
-          <Link
-            to="/profile"
-            className={
-              location.pathname ===
-              "/profile"
-                ? "active"
-                : ""
-            }
-          >
-            <MdPerson />
-            Profile
-          </Link>
+      {/* ADMINISTRATION */}
 
-        </div>
+     <div
+  className="menu-section-dropdown"
+  onClick={() =>
+    setAdminOpen(!adminOpen)
+  }
+>
+  <span>Administration</span>
+
+  <span>
+    {adminOpen ? "▼" : "▶"}
+  </span>
+</div>
+
+{adminOpen && (
+  <>
+    <Link
+      to="/admin/users"
+      className={
+        location.pathname === "/admin/users"
+          ? "active"
+          : ""
+      }
+    >
+      <MdPerson />
+      Users
+    </Link>
+
+    <Link
+  to="/admin/project-managers"
+  className={
+    location.pathname ===
+    "/admin/project-managers"
+      ? "active"
+      : ""
+  }
+>
+  👨‍💼 Project Managers
+</Link>
+  </>
+)}
+
+      {/* PROJECTS */}
+
+     <div
+  className="menu-section-dropdown"
+  onClick={() =>
+    setProjectsOpen(!projectsOpen)
+  }
+>
+  <span>Projects</span>
+
+  <span>
+    {projectsOpen ? "▼" : "▶"}
+  </span>
+</div>
+
+{projectsOpen && (
+  <>
+    <Link
+      to="/admin/projects"
+      className={
+        location.pathname === "/admin/projects"
+          ? "active"
+          : ""
+      }
+    >
+      <MdFolder />
+      All Projects
+    </Link>
+
+    <Link
+      to="/admin/tasks"
+      className={
+        location.pathname === "/admin/tasks"
+          ? "active"
+          : ""
+      }
+    >
+      <MdTask />
+      Tasks
+    </Link>
+  </>
+)}
+
+      {/* COLLABORATION */}
+
+    <div
+  className="menu-section-dropdown"
+  onClick={() =>
+    setCollabOpen(!collabOpen)
+  }
+>
+  <span>Collaboration</span>
+
+  <span>
+    {collabOpen ? "▼" : "▶"}
+  </span>
+</div>
+
+{collabOpen && (
+  <>
+   <Link
+  to="/admin/comments"
+  className={
+    location.pathname === "/admin/comments"
+      ? "active"
+      : ""
+  }
+>
+  💬 Comments
+</Link>
+
+<Link
+  to="/admin/attachments"
+  className={
+    location.pathname === "/admin/attachments"
+      ? "active"
+      : ""
+  }
+>
+  📎 Attachments
+</Link>
+
+<Link
+  to="/admin/notifications"
+  className={
+    location.pathname === "/admin/notifications"
+      ? "active"
+      : ""
+  }
+>
+  🔔 Notifications
+</Link>
+  </>
+)}
+
+      {/* SYSTEM */}
+<div
+  className="menu-section-dropdown"
+  onClick={() =>
+    setSystemOpen(!systemOpen)
+  }
+>
+  <span>System</span>
+
+  <span>
+    {systemOpen ? "▼" : "▶"}
+  </span>
+</div>
+
+{systemOpen && (
+  <>
+    <Link
+      to="/admin/activity-logs"
+      className={
+        location.pathname ===
+        "/admin/activity-logs"
+          ? "active"
+          : ""
+      }
+    >
+      📋 Activity Logs
+    </Link>
+  </>
+)}
+
+    </>
+
+  ) : (
+
+    <>
+
+      <Link
+        to="/projects"
+        className={
+          location.pathname === "/projects"
+            ? "active"
+            : ""
+        }
+      >
+        <MdFolder />
+        All Projects
+      </Link>
+
+      <Link
+        to="/tasks"
+        className={
+          location.pathname === "/tasks"
+            ? "active"
+            : ""
+        }
+      >
+        <MdTask />
+        All Tasks
+      </Link>
+
+      <Link
+        to="/mytasks"
+        className={
+          location.pathname === "/mytasks"
+            ? "active"
+            : ""
+        }
+      >
+        <MdTask />
+        My Tasks
+      </Link>
+
+      <Link
+        to="/profile"
+        className={
+          location.pathname === "/profile"
+            ? "active"
+            : ""
+        }
+      >
+        <MdPerson />
+        Profile
+      </Link>
+
+    </>
+
+  )}
+
+</div>
 
         <button
           className="logout-btn"

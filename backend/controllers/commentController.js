@@ -97,13 +97,18 @@ members.forEach((member) => {
     ]
   );
 
-  // 🔥 REAL TIME SOCKET
+  //  REAL TIME SOCKET
   io.to(`user_${member.user_id}`).emit("notification", {
     message: `New comment on "${task.title}"`,
     type: "comment",
     createdAt: new Date(),
   });
 
+});
+io.to("admins").emit("notification", {
+  message: `New comment on "${task.title}"`,
+  type: "comment",
+  createdAt: new Date(),
 });
 
         }

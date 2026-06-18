@@ -33,7 +33,7 @@ function LoginModal({
 
       const data = await response.json();
 
-      if (response.ok) {
+     if (response.ok) {
   localStorage.setItem(
     "token",
     data.token
@@ -46,8 +46,12 @@ function LoginModal({
 
   onClose();
 
-  navigate("/dashboard");
-}  else {
+  if (data.user.role === "admin") {
+    navigate("/admin");
+  } else {
+    navigate("/dashboard");
+  }
+} else {
         alert(data.message);
       }
     } catch (error) {

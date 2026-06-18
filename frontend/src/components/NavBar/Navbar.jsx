@@ -88,12 +88,17 @@ const [searchOpen, setSearchOpen] =
      SOCKET REALTIME
   ========================= */
   useEffect(() => {
-    if (!user?.id) return;
+  if (!user?.id) return;
 
-    socket.connect();
-    socket.emit("join", user.id);
+  socket.connect();
 
-    const handleNotification = (data) => {
+  socket.emit("join", user.id);
+
+  if (user.role === "admin") {
+    socket.emit("join_admin");
+  }
+
+  const handleNotification = (data) => {
       setNotifications((prev) => [data, ...prev]);
       playSound();
     };

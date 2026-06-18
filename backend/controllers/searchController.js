@@ -3,6 +3,7 @@ const db = require("../config/db");
 const globalSearch = (req, res) => {
   const keyword = req.query.q;
   const userId = req.user.id;
+  const role = req.user.role;
 
   if (!keyword) {
     return res.json({
@@ -10,6 +11,60 @@ const globalSearch = (req, res) => {
       tasks: [],
     });
   }
+
+  /* =========================
+     ADMIN SEARCH
+  ========================= */
+  if (role === "admin") {
+    const projectsSql = `
+      SELECT
+        id,
+        title
+      FROM projects
+      WHERE title LIKE ?
+      LIMIT 10
+    `;
+
+    const tasksSql = `
+      SELECT
+        id,
+        title
+      FROM tasks
+      WHERE title LIKE ?
+      LIMIT 10
+    `;
+
+    db.query(
+      projectsSql,
+      [`%${keyword}%`],
+      (err, projects) => {
+        if (err) {
+          return res.status(500).json(err);
+        }
+
+        db.query(
+          tasksSql,
+          [`%${keyword}%`],
+          (err, tasks) => {
+            if (err) {
+              return res.status(500).json(err);
+            }
+
+            res.json({
+              projects,
+              tasks,
+            });
+          }
+        );
+      }
+    );
+
+    return;
+  }
+
+  /* =========================
+     TEAM MEMBER / PM SEARCH
+  ========================= */
 
   const projectsSql = `
     SELECT DISTINCT
