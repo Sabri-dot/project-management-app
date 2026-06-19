@@ -213,6 +213,179 @@ const addProjectMember = (req, res) => {
   });
 };
 
+/* =======================
+       ADMIN CRUD
+=========================*/
+const getAllProjects = (req, res) => {
+  db.query(
+    `
+    SELECT
+      p.*,
+      u.full_name AS created_by_name
+    FROM projects p
+    LEFT JOIN users u
+      ON p.created_by = u.id
+    ORDER BY p.created_at DESC
+    `,
+    (err, result) => {
+      if (err)
+        return res.status(500).json(err);
+
+      res.json(result);
+    }
+  );
+};
+const getProjectById = (req, res) => {
+  const projectId = req.params.id;
+
+  db.query(
+    `
+    SELECT
+      p.*,
+      u.full_name AS created_by_name
+    FROM projects p
+    LEFT JOIN users u
+      ON p.created_by = u.id
+    WHERE p.id = ?
+    `,
+    [projectId],
+    (err, result) => {
+      if (err)
+        return res.status(500).json(err);
+
+      if (result.length === 0) {
+        return res.status(404).json({
+          message: "Project not found",
+        });
+      }
+
+      res.json(result[0]);
+    }
+  );
+};
+const createProject = (req, res) => {
+  const {
+    title,
+    description,
+    status,
+    priority,
+  } = req.body;
+
+  const createdBy = req.user.id;
+
+  db.query(
+    `
+    INSERT INTO projects
+    (
+      title,
+      description,
+      status,
+      priority,
+      created_by
+    )
+    VALUES (?, ?, ?, ?, ?)
+    `,
+    [
+      title,
+      description,
+      status,
+      priority,
+      createdBy,
+    ],
+    (err, result) => {
+      if (err)
+        return res.status(500).json(err);
+
+      res.json({
+        message:
+          "Project created successfully",
+        projectId: result.insertId,
+      });
+    }
+  );
+};
+const updateProject = (req, res) => {
+  const projectId = req.params.id;
+
+  const {
+    title,
+    description,
+    status,
+    priority,
+  } = req.body;
+
+  db.query(
+    `
+    UPDATE projects
+    SET
+      title = ?,
+      description = ?,
+      status = ?,
+      priority = ?
+    WHERE id = ?
+    `,
+    [
+      title,
+      description,
+      status,
+      priority,
+      projectId,
+    ],
+    (err) => {
+      if (err)
+        return res.status(500).json(err);
+
+      res.json({
+        message:
+          "Project updated successfully",
+      });
+    }
+  );
+};
+const deleteProject = (req, res) => {
+  const projectId = req.params.id;
+
+  db.query(
+    `
+    DELETE FROM project_members
+    WHERE project_id = ?
+    `,
+    [projectId],
+    (err) => {
+      if (err)
+        return res.status(500).json(err);
+
+      db.query(
+        `
+        DELETE FROM tasks
+        WHERE project_id = ?
+        `,
+        [projectId],
+        (err) => {
+          if (err)
+            return res.status(500).json(err);
+
+          db.query(
+            `
+            DELETE FROM projects
+            WHERE id = ?
+            `,
+            [projectId],
+            (err) => {
+              if (err)
+                return res.status(500).json(err);
+
+              res.json({
+                message:
+                  "Project deleted successfully",
+              });
+            }
+          );
+        }
+      );
+    }
+  );
+};
 /* =========================
    EXPORTS
 ========================= */
@@ -222,4 +395,10 @@ module.exports = {
   getMyProjectTasks,
   getProjectMembers,
   addProjectMember,
+
+  getAllProjects,
+  getProjectById,
+  createProject,
+  updateProject,
+  deleteProject,
 };

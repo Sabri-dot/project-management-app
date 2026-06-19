@@ -10,9 +10,10 @@ const verifyToken =
 const adminMiddleware =
   require("../middleware/adminMiddleware");
 
+/* USERS + DASHBOARD */
+
 const {
   getAllUsers,
-  getAllProjects,
   getAllTasks,
   getAdminDashboard,
 
@@ -21,10 +22,32 @@ const {
   updateUser,
   deleteUser,
 
-} = require("../controllers/adminController");
+} = require(
+  "../controllers/adminController"
+);
+
+/* PROJECTS */
+
+const {
+  getAllProjects,
+  getProjectById,
+  createProject,
+  updateProject,
+  deleteProject,
+} = require(
+  "../controllers/projectController"
+);
+
 /* =========================
    USERS CRUD
 ========================= */
+
+router.get(
+  "/users",
+  verifyToken,
+  adminMiddleware,
+  getAllUsers
+);
 
 router.get(
   "/users/:id",
@@ -53,12 +76,10 @@ router.delete(
   adminMiddleware,
   deleteUser
 );
-router.get(
-  "/users",
-  verifyToken,
-  adminMiddleware,
-  getAllUsers
-);
+
+/* =========================
+   PROJECTS CRUD
+========================= */
 
 router.get(
   "/projects",
@@ -68,11 +89,48 @@ router.get(
 );
 
 router.get(
+  "/projects/:id",
+  verifyToken,
+  adminMiddleware,
+  getProjectById
+);
+
+router.post(
+  "/projects",
+  verifyToken,
+  adminMiddleware,
+  createProject
+);
+
+router.put(
+  "/projects/:id",
+  verifyToken,
+  adminMiddleware,
+  updateProject
+);
+
+router.delete(
+  "/projects/:id",
+  verifyToken,
+  adminMiddleware,
+  deleteProject
+);
+
+/* =========================
+   TASKS
+========================= */
+
+router.get(
   "/tasks",
   verifyToken,
   adminMiddleware,
   getAllTasks
 );
+
+/* =========================
+   DASHBOARD
+========================= */
+
 router.get(
   "/dashboard",
   verifyToken,
