@@ -570,7 +570,12 @@ function AdminUsers() {
 
       {showAddModal && (
         <div className="modal d-block">
-          <div className="modal-dialog modal-lg">
+        <div
+  className="modal-dialog"
+  style={{
+    maxWidth: "650px",
+  }}
+>
             <div className="modal-content">
 
               <div className="modal-header">
@@ -643,110 +648,280 @@ function AdminUsers() {
         </div>
       )}
 
-      {/* EDIT USER */}
+     {/* EDIT USER */}
 
-      {showEditModal && (
-        <div className="modal d-block">
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
+{showEditModal && (
+  <>
+    <div
+      className="position-fixed top-0 start-0 w-100 h-100"
+      style={{
+        background: "rgba(15,23,42,.65)",
+        backdropFilter: "blur(8px)",
+        zIndex: 1050,
+      }}
+      onClick={() => setShowEditModal(false)}
+    />
 
-              <div className="modal-header">
-                <h5>Edit User</h5>
-              </div>
+    <div
+  className="position-fixed top-50 start-50 translate-middle"
+  style={{
+    zIndex: 1060,
+    width: "92%",
+    maxWidth: "700px",
+    maxHeight: "90vh",
+    overflowY: "auto",
+  }}
+>
+      <div
+        className="card border-0 shadow-lg overflow-hidden"
+        style={{
+          borderRadius: "24px",
+          background: "#fff",
+        }}
+      >
+        {/* HEADER */}
 
-              <div className="modal-body">
+       <div
+  className="text-center border-bottom"
+  style={{
+    padding: "32px",
+    background: "#ffffff",
+  }}
+>
+          <img
+            src={
+              selectedUser?.avatar ||
+              `https://ui-avatars.com/api/?name=${selectedUser?.full_name}&background=random`
+            }
+            alt=""
+            className="rounded-circle border border-4 border-white shadow"
+            style={{
+              width: "72px",
+              height: "72px",
+              objectFit: "cover",
+            }}
+          />
 
-                <input
-                  className="form-control mb-3"
-                  value={
-                    formData.full_name
-                  }
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      full_name:
-                        e.target.value,
-                    })
-                  }
-                />
+          <h3
+  className="fw-bold mt-3 mb-1"
+  style={{
+    color: "#111827",
+  }}
+>
+  Edit Team Member
+</h3>
 
-                <input
-                  className="form-control mb-3"
-                  value={formData.email}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      email:
-                        e.target.value,
-                    })
-                  }
-                />
+<p
+  className="mb-0"
+  style={{
+    color: "#6b7280",
+    fontSize: "14px",
+  }}
+>
+  Manage profile information and permissions
+</p>
+        </div>
 
-                <input
-                  className="form-control mb-3"
-                  value={formData.phone}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      phone:
-                        e.target.value,
-                    })
-                  }
-                />
+        {/* BODY */}
 
-                <input
-                  className="form-control mb-3"
-                  value={
-                    formData.location
-                  }
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      location:
-                        e.target.value,
-                    })
-                  }
-                />
+        <div
+          className="p-4"
+          style={{
+            background: "#ffffff"
+          }}
+        >
+          <div className="row g-3">
 
-                <textarea
-                  className="form-control"
-                  rows="4"
-                  value={formData.bio}
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      bio:
-                        e.target.value,
-                    })
-                  }
-                />
+            <div className="col-md-6">
+              <label className="fw-semibold mb-2">
+                Full Name
+              </label>
 
-              </div>
-
-              <div className="modal-footer">
-
-                <button
-                  className="btn btn-secondary"
-                  onClick={() =>
-                    setShowEditModal(false)
-                  }
-                >
-                  Cancel
-                </button>
-
-                <button
-                  className="btn btn-success"
-                  onClick={updateUser}
-                >
-                  Save Changes
-                </button>
-
-              </div>
-
+              <input
+                type="text"
+                className="form-control border-0 shadow-sm"
+                value={formData.full_name}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    full_name: e.target.value,
+                  })
+                }
+                style={{
+                  height: "52px",
+                  borderRadius: "14px",
+                  border: "1px solid #e5e7eb",
+                }}
+              />
             </div>
+
+            <div className="col-md-6">
+              <label className="fw-semibold mb-2">
+                Email
+              </label>
+
+              <input
+                type="email"
+                className="form-control border-0 shadow-sm"
+                value={formData.email}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    email: e.target.value,
+                  })
+                }
+                style={{
+                  height: "52px",
+                  borderRadius: "14px",
+                }}
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="fw-semibold mb-2">
+                Role
+              </label>
+
+              <select
+                className="form-select border-0 shadow-sm"
+                value={formData.role}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    role: e.target.value,
+                  })
+                }
+                style={{
+                  height: "52px",
+                  borderRadius: "14px",
+                }}
+              >
+                <option value="admin">
+                  Admin
+                </option>
+
+                <option value="project_manager">
+                  Project Manager
+                </option>
+
+                <option value="team_member">
+                  Team Member
+                </option>
+              </select>
+            </div>
+
+            <div className="col-md-6">
+              <label className="fw-semibold mb-2">
+                Phone
+              </label>
+
+              <input
+                type="text"
+                className="form-control border-0 shadow-sm"
+                value={formData.phone}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    phone: e.target.value,
+                  })
+                }
+                style={{
+                  height: "52px",
+                  borderRadius: "14px",
+                }}
+              />
+            </div>
+
+            <div className="col-12">
+              <label className="fw-semibold mb-2">
+                Location
+              </label>
+
+              <input
+                type="text"
+                className="form-control border-0 shadow-sm"
+                value={formData.location}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    location: e.target.value,
+                  })
+                }
+                style={{
+                  height: "52px",
+                  borderRadius: "14px",
+                }}
+              />
+            </div>
+
+            <div className="col-12">
+              <label className="fw-semibold mb-2">
+                Bio
+              </label>
+
+              <textarea
+                rows="4"
+                className="form-control border-0 shadow-sm"
+                value={formData.bio}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    bio: e.target.value,
+                  })
+                }
+                style={{
+                  borderRadius: "14px",
+                  resize: "none",
+                }}
+              />
+            </div>
+
           </div>
         </div>
-      )}
+
+        {/* FOOTER */}
+
+        <div
+          className="d-flex justify-content-end gap-2 p-4"
+          style={{
+            background: "#fff",
+          }}
+        >
+          <button
+            className="btn px-4"
+            style={{
+              borderRadius: "12px",
+              height: "46px",
+              background: "#e5e7eb",
+            }}
+            onClick={() =>
+              setShowEditModal(false)
+            }
+          >
+            Cancel
+          </button>
+
+          <button
+            className="btn px-4 fw-semibold"
+            style={{
+              borderRadius: "12px",
+              height: "46px",
+              color: "#fff",
+              border: "none",
+              background:
+                "linear-gradient(135deg,#10b981,#22c55e)",
+            }}
+            onClick={updateUser}
+          >
+            Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </>
+)}
+
+    
 
       {/* DELETE MODAL */}
 
