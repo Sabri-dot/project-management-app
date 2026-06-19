@@ -38,6 +38,16 @@ const {
   "../controllers/projectController"
 );
 
+/* PROJECT MEMBERS */
+
+const {
+  getAllProjectMembers,
+  getProjectMemberById,
+  createProjectMember,
+  deleteProjectMember,
+} = require(
+  "../controllers/projectMemberController"
+);
 /* =========================
    USERS CRUD
 ========================= */
@@ -114,6 +124,38 @@ router.delete(
   verifyToken,
   adminMiddleware,
   deleteProject
+);
+
+/* =========================
+   PROJECT MEMBERS CRUD
+========================= */
+
+router.get(
+  "/project-members",
+  verifyToken,
+  adminMiddleware,
+  getAllProjectMembers
+);
+
+router.get(
+  "/project-members/:id",
+  verifyToken,
+  adminMiddleware,
+  getProjectMemberById
+);
+
+router.post(
+  "/project-members",
+  verifyToken,
+  adminMiddleware,
+  createProjectMember
+);
+
+router.delete(
+  "/project-members/:id",
+  verifyToken,
+  adminMiddleware,
+  deleteProjectMember
 );
 
 /* =========================
