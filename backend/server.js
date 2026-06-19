@@ -79,13 +79,17 @@ const searchRoutes = require("./routes/searchRoutes");
 const adminRoutes =
   require("./routes/adminRoutes");
 
-
+const adminCommentRoutes =
+  require("./routes/adminCommentRoutes");
 
   app.use(
   "/api/admin",
   adminRoutes
 );
-
+app.use(
+  "/api/admin/comments",
+  adminCommentRoutes
+);
 
 
 

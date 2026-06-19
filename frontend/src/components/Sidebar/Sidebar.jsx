@@ -131,7 +131,7 @@ const [systemOpen, setSystemOpen] =
       }
     >
       <MdPerson />
-      Users
+      Team Members
     </Link>
 
     <Link
