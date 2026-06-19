@@ -47,10 +47,20 @@ function AppRoutes() {
           path="/profile"
           element={<Profile />}
         />
-        <Route
-  path="/admin"
-  element={<AdminDashboard />}
-/>
+
+    
+
+
+
+<Route path="/admin" element={<AdminDashboard />}/>
+<Route path="/admin/users" element={<AdminUsers />} />
+<Route path="/admin/projects" element={<AdminProjects />} />
+<Route path="/admin/tasks" element={<AdminTasks />} />
+<Route path="/admin/project-members" element={<AdminProjectMembers />} />
+<Route path="/admin/comments" element={<AdminComments />} />
+<Route path="/admin/notifications" element={<AdminNotifications />} />
+<Route path="/admin/attachments" element={<AdminAttachments />} />
+<Route path="/admin/activity-logs" element={<AdminActivityLogs />} />
 
       </Routes>
     </BrowserRouter>
