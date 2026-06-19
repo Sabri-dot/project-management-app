@@ -232,15 +232,18 @@ const getAllUsers = (
   db.query(
     `
     SELECT
-      id,
-      full_name,
-      email,
-      role,
-      avatar,
-      created_at,
-      last_seen
-    FROM users
-    ORDER BY created_at DESC
+  id,
+  full_name,
+  email,
+  role,
+  avatar,
+  phone,
+  location,
+  bio,
+  created_at,
+  last_seen
+FROM users
+ORDER BY created_at DESC
     `,
     (err, result) => {
 
@@ -336,15 +339,18 @@ WHERE id = ?
 const createUser = async (req, res) => {
   try {
     const {
-      full_name,
-      email,
-      password,
-      role,
-      avatar,
-      phone,
-      location,
-      bio,
-    } = req.body;
+  full_name,
+  email,
+  password,
+  role,
+  phone,
+  location,
+  bio,
+} = req.body;
+
+const avatar = req.file
+  ? `/uploads/${req.file.filename}`
+  : null;
 
     const hashedPassword =
       await bcrypt.hash(password, 10);
@@ -396,14 +402,17 @@ const updateUser = (req, res) => {
   const userId = req.params.id;
 
   const {
-    full_name,
-    email,
-    role,
-    avatar,
-    phone,
-    location,
-    bio,
-  } = req.body;
+  full_name,
+  email,
+  role,
+  phone,
+  location,
+  bio,
+} = req.body;
+
+const avatar = req.file
+  ? `/uploads/${req.file.filename}`
+  : req.body.avatar;
 
   db.query(
     `

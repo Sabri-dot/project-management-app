@@ -10,6 +10,8 @@ const verifyToken =
 const adminMiddleware =
   require("../middleware/adminMiddleware");
 
+  const uploadAvatar =
+  require("../middleware/upload");
 /* USERS + DASHBOARD */
 
 const {
@@ -117,6 +119,7 @@ router.post(
   "/users",
   verifyToken,
   adminMiddleware,
+  uploadAvatar.single("avatar"),
   createUser
 );
 
@@ -124,6 +127,7 @@ router.put(
   "/users/:id",
   verifyToken,
   adminMiddleware,
+  uploadAvatar.single("avatar"),
   updateUser
 );
 

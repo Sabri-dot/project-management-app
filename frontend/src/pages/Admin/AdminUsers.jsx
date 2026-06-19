@@ -30,15 +30,16 @@ function AdminUsers() {
     localStorage.getItem("token");
 
   const [formData, setFormData] =
-    useState({
-      full_name: "",
-      email: "",
-      password: "",
-      role: "team_member",
-      phone: "",
-      location: "",
-      bio: "",
-    });
+  useState({
+    full_name: "",
+    email: "",
+    password: "",
+    role: "team_member",
+    avatar: null,
+    phone: "",
+    location: "",
+    bio: "",
+  });
 
   const fetchUsers = async () => {
     try {
@@ -89,40 +90,88 @@ function AdminUsers() {
     }, 5000);
   };
 
-  const createUser = async () => {
-    try {
-      await axios.post(
-        "http://localhost:5000/api/admin/users",
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
+ const createUser = async () => {
+  try {
+
+    const data = new FormData();
+
+    data.append(
+      "full_name",
+      formData.full_name
+    );
+
+    data.append(
+      "email",
+      formData.email
+    );
+
+    data.append(
+      "password",
+      formData.password
+    );
+
+    data.append(
+      "role",
+      formData.role
+    );
+
+    data.append(
+      "phone",
+      formData.phone
+    );
+
+    data.append(
+      "location",
+      formData.location
+    );
+
+    data.append(
+      "bio",
+      formData.bio
+    );
+
+    if (formData.avatar) {
+      data.append(
+        "avatar",
+        formData.avatar
       );
-
-      setShowAddModal(false);
-
-      fetchUsers();
-
-      showSuccess(
-        "User created successfully"
-      );
-
-      setFormData({
-        full_name: "",
-        email: "",
-        password: "",
-        role: "team_member",
-        phone: "",
-        location: "",
-        bio: "",
-      });
-
-    } catch (err) {
-      console.log(err);
     }
-  };
+
+    await axios.post(
+      "http://localhost:5000/api/admin/users",
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type":
+            "multipart/form-data",
+        },
+      }
+    );
+
+    setShowAddModal(false);
+
+    fetchUsers();
+
+    showSuccess(
+      "User created successfully"
+    );
+
+    setFormData({
+      full_name: "",
+      email: "",
+      password: "",
+      role: "team_member",
+      avatar: null,
+      phone: "",
+      location: "",
+      bio: "",
+    });
+
+  } catch (err) {
+    console.log(err);
+  }
+};
 
   const updateUser = async () => {
     try {
@@ -316,11 +365,11 @@ function AdminUsers() {
 
             <div className="position-relative">
 
-            <img
+          <img
   src={
-    user.avatar ||
-    "https://ui-avatars.com/api/?name=" +
-      user.full_name
+    user.avatar
+      ? `http://localhost:5000${user.avatar}`
+      : `https://ui-avatars.com/api/?name=${user.full_name}`
   }
   alt=""
   className="rounded-circle border border-3 border-white shadow"
@@ -329,7 +378,8 @@ function AdminUsers() {
     height: "95px",
     objectFit: "cover",
   }}
-/><span
+/>
+<span
   style={{
     position: "absolute",
     bottom: "5px",
@@ -800,13 +850,16 @@ function AdminUsers() {
               </label>
 
               <input
-                type="file"
-                className="form-control shadow-sm"
-                accept="image/*"
-                style={{
-                  borderRadius: "14px",
-                }}
-              />
+  type="file"
+  className="form-control shadow-sm"
+  accept="image/*"
+  onChange={(e) =>
+    setFormData({
+      ...formData,
+      avatar: e.target.files[0],
+    })
+  }
+/>
             </div>
 
             <div className="col-12">
@@ -909,9 +962,10 @@ function AdminUsers() {
 >
           <img
             src={
-              selectedUser?.avatar ||
-              `https://ui-avatars.com/api/?name=${selectedUser?.full_name}&background=random`
-            }
+  selectedUser?.avatar
+    ? `http://localhost:5000${selectedUser.avatar}`
+    : `https://ui-avatars.com/api/?name=${selectedUser?.full_name}`
+}
             alt=""
             className="rounded-circle border border-4 border-white shadow"
             style={{
