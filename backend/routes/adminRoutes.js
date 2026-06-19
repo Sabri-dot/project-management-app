@@ -83,6 +83,18 @@ const {
   "../controllers/AdminAttachmentController"
 );
 
+/* ACTIVITY LOGS */
+
+const {
+  getAllActivityLogs,
+  getActivityLogById,
+  createActivityLog,
+  updateActivityLog,
+  deleteActivityLog,
+} = require(
+  "../controllers/AdminActivityLogController"
+);
+
 /* =========================
    USERS CRUD
 ========================= */
@@ -306,6 +318,44 @@ router.delete(
   verifyToken,
   adminMiddleware,
   deleteAttachment
+);
+/* =========================
+   ACTIVITY LOGS CRUD
+========================= */
+
+router.get(
+  "/activity-logs",
+  verifyToken,
+  adminMiddleware,
+  getAllActivityLogs
+);
+
+router.get(
+  "/activity-logs/:id",
+  verifyToken,
+  adminMiddleware,
+  getActivityLogById
+);
+
+router.post(
+  "/activity-logs",
+  verifyToken,
+  adminMiddleware,
+  createActivityLog
+);
+
+router.put(
+  "/activity-logs/:id",
+  verifyToken,
+  adminMiddleware,
+  updateActivityLog
+);
+
+router.delete(
+  "/activity-logs/:id",
+  verifyToken,
+  adminMiddleware,
+  deleteActivityLog
 );
 /* =========================
    DASHBOARD
