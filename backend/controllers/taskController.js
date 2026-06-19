@@ -270,11 +270,204 @@ const startTask = (req, res) => {
     }
   );
 };
+/* =========================
+   ADMIN - GET ALL TASKS
+========================= */
 
+const getAdminTasks = (req, res) => {
+  db.query(
+    `
+    SELECT
+      t.*,
+      p.title AS project_name,
+      u.full_name AS assigned_user
+    FROM tasks t
+    LEFT JOIN projects p
+      ON t.project_id = p.id
+    LEFT JOIN users u
+      ON t.assigned_to = u.id
+    ORDER BY t.created_at DESC
+    `,
+    (err, result) => {
+      if (err)
+        return res.status(500).json(err);
+
+      res.json(result);
+    }
+  );
+};
+
+/* =========================
+   ADMIN - GET TASK BY ID
+========================= */
+
+const getTaskById = (req, res) => {
+  const taskId = req.params.id;
+
+  db.query(
+    `
+    SELECT *
+    FROM tasks
+    WHERE id = ?
+    `,
+    [taskId],
+    (err, result) => {
+      if (err)
+        return res.status(500).json(err);
+
+      if (result.length === 0) {
+        return res.status(404).json({
+          message: "Task not found",
+        });
+      }
+
+      res.json(result[0]);
+    }
+  );
+};
+
+/* =========================
+   ADMIN - CREATE TASK
+========================= */
+
+const createTask = (req, res) => {
+  const {
+    title,
+    description,
+    priority,
+    status,
+    due_date,
+    project_id,
+    assigned_to,
+  } = req.body;
+
+  db.query(
+    `
+    INSERT INTO tasks
+    (
+      title,
+      description,
+      priority,
+      status,
+      due_date,
+      project_id,
+      assigned_to
+    )
+    VALUES (?, ?, ?, ?, ?, ?, ?)
+    `,
+    [
+      title,
+      description,
+      priority,
+      status,
+      due_date,
+      project_id,
+      assigned_to,
+    ],
+    (err, result) => {
+      if (err)
+        return res.status(500).json(err);
+
+      res.json({
+        message: "Task created successfully",
+        taskId: result.insertId,
+      });
+    }
+  );
+};
+
+/* =========================
+   ADMIN - UPDATE TASK
+========================= */
+
+const updateTask = (req, res) => {
+  const taskId = req.params.id;
+
+  const {
+    title,
+    description,
+    priority,
+    status,
+    due_date,
+    project_id,
+    assigned_to,
+  } = req.body;
+
+  let completedAt = null;
+
+  if (status === "done") {
+    completedAt = new Date();
+  }
+
+  db.query(
+    `
+    UPDATE tasks
+    SET
+      title = ?,
+      description = ?,
+      priority = ?,
+      status = ?,
+      due_date = ?,
+      project_id = ?,
+      assigned_to = ?,
+      completed_at = ?
+    WHERE id = ?
+    `,
+    [
+      title,
+      description,
+      priority,
+      status,
+      due_date,
+      project_id,
+      assigned_to,
+      completedAt,
+      taskId,
+    ],
+    (err) => {
+      if (err)
+        return res.status(500).json(err);
+
+      res.json({
+        message: "Task updated successfully",
+      });
+    }
+  );
+};
+
+/* =========================
+   ADMIN - DELETE TASK
+========================= */
+
+const deleteTask = (req, res) => {
+  const taskId = req.params.id;
+
+  db.query(
+    `
+    DELETE FROM tasks
+    WHERE id = ?
+    `,
+    [taskId],
+    (err) => {
+      if (err)
+        return res.status(500).json(err);
+
+      res.json({
+        message: "Task deleted successfully",
+      });
+    }
+  );
+};
 module.exports = {
   getMyTasks,
   getAllTasks,
   getProjectTasks,
   markTaskAsDone,
   startTask,
+
+  getAdminTasks,
+  getTaskById,
+  createTask,
+  updateTask,
+  deleteTask,
 };

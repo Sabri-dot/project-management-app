@@ -48,6 +48,17 @@ const {
 } = require(
   "../controllers/projectMemberController"
 );
+
+/* TASKS  */
+
+const {
+  getAdminTasks,
+  getTaskById,
+  createTask,
+  updateTask,
+  deleteTask,
+} = require("../controllers/taskController");
+
 /* =========================
    USERS CRUD
 ========================= */
@@ -169,6 +180,33 @@ router.get(
   getAllTasks
 );
 
+router.get(
+  "/tasks/:id",
+  verifyToken,
+  adminMiddleware,
+  getTaskById
+);
+
+router.post(
+  "/tasks",
+  verifyToken,
+  adminMiddleware,
+  createTask
+);
+
+router.put(
+  "/tasks/:id",
+  verifyToken,
+  adminMiddleware,
+  updateTask
+);
+
+router.delete(
+  "/tasks/:id",
+  verifyToken,
+  adminMiddleware,
+  deleteTask
+);
 /* =========================
    DASHBOARD
 ========================= */
