@@ -1,0 +1,182 @@
+const db = require("../config/db");
+
+/* =========================
+   GET ALL ATTACHMENTS
+========================= */
+
+const getAllAttachments = (req, res) => {
+  db.query(
+    `
+    SELECT
+      a.*,
+      t.title AS task_title,
+      u.full_name AS uploaded_by_name
+    FROM attachments a
+    LEFT JOIN tasks t
+      ON a.task_id = t.id
+    LEFT JOIN users u
+      ON a.uploaded_by = u.id
+    ORDER BY a.created_at DESC
+    `,
+    (err, result) => {
+      if (err)
+        return res.status(500).json(err);
+
+      res.json(result);
+    }
+  );
+};
+
+/* =========================
+   GET ATTACHMENT BY ID
+========================= */
+
+const getAttachmentById = (req, res) => {
+  const attachmentId = req.params.id;
+
+  db.query(
+    `
+    SELECT
+      a.*,
+      t.title AS task_title,
+      u.full_name AS uploaded_by_name
+    FROM attachments a
+    LEFT JOIN tasks t
+      ON a.task_id = t.id
+    LEFT JOIN users u
+      ON a.uploaded_by = u.id
+    WHERE a.id = ?
+    `,
+    [attachmentId],
+    (err, result) => {
+      if (err)
+        return res.status(500).json(err);
+
+      if (result.length === 0) {
+        return res.status(404).json({
+          message: "Attachment not found",
+        });
+      }
+
+      res.json(result[0]);
+    }
+  );
+};
+
+/* =========================
+   CREATE ATTACHMENT
+========================= */
+
+const createAttachment = (req, res) => {
+  const {
+    task_id,
+    file_name,
+    file_url,
+    uploaded_by,
+  } = req.body;
+
+  db.query(
+    `
+    INSERT INTO attachments
+    (
+      task_id,
+      file_name,
+      file_url,
+      uploaded_by
+    )
+    VALUES (?, ?, ?, ?)
+    `,
+    [
+      task_id,
+      file_name,
+      file_url,
+      uploaded_by,
+    ],
+    (err, result) => {
+      if (err)
+        return res.status(500).json(err);
+
+      res.status(201).json({
+        message:
+          "Attachment created successfully",
+        id: result.insertId,
+      });
+    }
+  );
+};
+
+/* =========================
+   UPDATE ATTACHMENT
+========================= */
+
+const updateAttachment = (req, res) => {
+  const attachmentId = req.params.id;
+
+  const {
+    task_id,
+    file_name,
+    file_url,
+    uploaded_by,
+  } = req.body;
+
+  db.query(
+    `
+    UPDATE attachments
+    SET
+      task_id = ?,
+      file_name = ?,
+      file_url = ?,
+      uploaded_by = ?
+    WHERE id = ?
+    `,
+    [
+      task_id,
+      file_name,
+      file_url,
+      uploaded_by,
+      attachmentId,
+    ],
+    (err) => {
+      if (err)
+        return res.status(500).json(err);
+
+      res.json({
+        message:
+          "Attachment updated successfully",
+      });
+    }
+  );
+};
+
+/* =========================
+   DELETE ATTACHMENT
+========================= */
+
+const deleteAttachment = (req, res) => {
+  const attachmentId = req.params.id;
+
+  db.query(
+    `
+    DELETE FROM attachments
+    WHERE id = ?
+    `,
+    [attachmentId],
+    (err) => {
+      if (err)
+        return res.status(500).json(err);
+
+      res.json({
+        message:
+          "Attachment deleted successfully",
+      });
+    }
+  );
+};
+
+module.exports = {
+  getAllAttachments,
+  getAttachmentById,
+  createAttachment,
+  updateAttachment,
+  deleteAttachment,
+};

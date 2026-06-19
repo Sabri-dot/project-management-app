@@ -71,6 +71,18 @@ const {
   "../controllers/AdminNotificationController"
 );
 
+/* ATTACHMENTS */
+
+const {
+  getAllAttachments,
+  getAttachmentById,
+  createAttachment,
+  updateAttachment,
+  deleteAttachment,
+} = require(
+  "../controllers/AdminAttachmentController"
+);
+
 /* =========================
    USERS CRUD
 ========================= */
@@ -256,6 +268,44 @@ router.delete(
   verifyToken,
   adminMiddleware,
   deleteNotification
+);
+/* =========================
+   ATTACHMENTS CRUD
+========================= */
+
+router.get(
+  "/attachments",
+  verifyToken,
+  adminMiddleware,
+  getAllAttachments
+);
+
+router.get(
+  "/attachments/:id",
+  verifyToken,
+  adminMiddleware,
+  getAttachmentById
+);
+
+router.post(
+  "/attachments",
+  verifyToken,
+  adminMiddleware,
+  createAttachment
+);
+
+router.put(
+  "/attachments/:id",
+  verifyToken,
+  adminMiddleware,
+  updateAttachment
+);
+
+router.delete(
+  "/attachments/:id",
+  verifyToken,
+  adminMiddleware,
+  deleteAttachment
 );
 /* =========================
    DASHBOARD
