@@ -1,4 +1,5 @@
 const db = require("../config/db");
+const bcrypt = require("bcryptjs");
 
 const getAdminDashboard = (req, res) => {
   const dashboard = {};
@@ -286,7 +287,149 @@ const getAllProjects = (
     }
   );
 };
+/* =========================
+   GET USER BY ID
+========================= */
 
+const getUserById = (req, res) => {
+  const userId = req.params.id;
+
+  db.query(
+    `
+    SELECT
+      id,
+      full_name,
+      email,
+      role,
+      avatar,
+      created_at
+    FROM users
+    WHERE id = ?
+    `,
+    [userId],
+    (err, result) => {
+      if (err)
+        return res.status(500).json(err);
+
+      if (result.length === 0) {
+        return res.status(404).json({
+          message: "User not found",
+        });
+      }
+
+      res.json(result[0]);
+    }
+  );
+};
+/* =========================
+   CREATE USER
+========================= */
+
+const createUser = async (req, res) => {
+  try {
+    const {
+      full_name,
+      email,
+      password,
+      role,
+    } = req.body;
+
+    const hashedPassword =
+      await bcrypt.hash(password, 10);
+
+    db.query(
+      `
+      INSERT INTO users
+      (
+        full_name,
+        email,
+        password,
+        role
+      )
+      VALUES (?, ?, ?, ?)
+      `,
+      [
+        full_name,
+        email,
+        hashedPassword,
+        role,
+      ],
+      (err) => {
+        if (err)
+          return res.status(500).json(err);
+
+        res.json({
+          message:
+            "User created successfully",
+        });
+      }
+    );
+  } catch (error) {
+    res.status(500).json(error);
+  }
+};
+/* =========================
+   UPDATE USER
+========================= */
+
+const updateUser = (req, res) => {
+  const userId = req.params.id;
+
+  const {
+    full_name,
+    email,
+    role,
+  } = req.body;
+
+  db.query(
+    `
+    UPDATE users
+    SET
+      full_name = ?,
+      email = ?,
+      role = ?
+    WHERE id = ?
+    `,
+    [
+      full_name,
+      email,
+      role,
+      userId,
+    ],
+    (err) => {
+      if (err)
+        return res.status(500).json(err);
+
+      res.json({
+        message:
+          "User updated successfully",
+      });
+    }
+  );
+};/* =========================
+   DELETE USER
+========================= */
+
+const deleteUser = (req, res) => {
+  const userId = req.params.id;
+
+  db.query(
+    `
+    DELETE FROM users
+    WHERE id = ?
+    `,
+    [userId],
+    (err) => {
+      if (err)
+        return res.status(500).json(err);
+
+      res.json({
+        message:
+          "User deleted successfully",
+      });
+    }
+  );
+};
 /* =========================
    ALL TASKS
 ========================= */
@@ -326,4 +469,8 @@ module.exports = {
   getAllProjects,
   getAllTasks,
   getAdminDashboard,
+  getUserById,
+  createUser,
+  updateUser,
+  deleteUser,
 };
