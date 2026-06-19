@@ -59,6 +59,18 @@ const {
   deleteTask,
 } = require("../controllers/taskController");
 
+/* NOTIFICATIONS */
+
+const {
+  getAllNotifications,
+  getNotificationById,
+  createNotification,
+  updateNotification,
+  deleteNotification,
+} = require(
+  "../controllers/AdminNotificationController"
+);
+
 /* =========================
    USERS CRUD
 ========================= */
@@ -206,6 +218,44 @@ router.delete(
   verifyToken,
   adminMiddleware,
   deleteTask
+);
+/* =========================
+   NOTIFICATIONS CRUD
+========================= */
+
+router.get(
+  "/notifications",
+  verifyToken,
+  adminMiddleware,
+  getAllNotifications
+);
+
+router.get(
+  "/notifications/:id",
+  verifyToken,
+  adminMiddleware,
+  getNotificationById
+);
+
+router.post(
+  "/notifications",
+  verifyToken,
+  adminMiddleware,
+  createNotification
+);
+
+router.put(
+  "/notifications/:id",
+  verifyToken,
+  adminMiddleware,
+  updateNotification
+);
+
+router.delete(
+  "/notifications/:id",
+  verifyToken,
+  adminMiddleware,
+  deleteNotification
 );
 /* =========================
    DASHBOARD
