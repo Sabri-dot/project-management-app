@@ -1,9 +1,5 @@
-function AdminUsers() {
-  return (
-    <div>
-      <h1>Admin Users</h1>
-    </div>
-  );
+function AdminAttachments() {
+  return <h1>Admin Attachments</h1>;
 }
 
-export default AdminUsers;
+export default AdminAttachments;

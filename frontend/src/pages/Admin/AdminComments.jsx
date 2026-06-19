@@ -1,9 +1,5 @@
-function AdminUsers() {
-  return (
-    <div>
-      <h1>Admin Users</h1>
-    </div>
-  );
+function AdminComments() {
+  return <h1>Admin Comments</h1>;
 }
 
-export default AdminUsers;
+export default AdminComments;

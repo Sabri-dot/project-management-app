@@ -1,9 +1,5 @@
-function AdminUsers() {
-  return (
-    <div>
-      <h1>Admin Users</h1>
-    </div>
-  );
+function AdminNotifications() {
+  return <h1>Admin Notifications</h1>;
 }
 
-export default AdminUsers;
+export default AdminNotifications;

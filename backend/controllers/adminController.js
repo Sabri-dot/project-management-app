@@ -266,14 +266,19 @@ const getAllProjects = (
 
   db.query(
     `
-    SELECT
-      id,
-      title,
-      status,
-      priority,
-      created_at
-    FROM projects
-    ORDER BY created_at DESC
+   SELECT
+  id,
+  full_name,
+  email,
+  role,
+  avatar,
+  phone,
+  location,
+  bio,
+  created_at,
+  last_seen
+FROM users
+ORDER BY created_at DESC
     `,
     (err, result) => {
 
@@ -296,15 +301,18 @@ const getUserById = (req, res) => {
 
   db.query(
     `
-    SELECT
-      id,
-      full_name,
-      email,
-      role,
-      avatar,
-      created_at
-    FROM users
-    WHERE id = ?
+   SELECT
+  id,
+  full_name,
+  email,
+  role,
+  avatar,
+  phone,
+  location,
+  bio,
+  created_at
+FROM users
+WHERE id = ?
     `,
     [userId],
     (err, result) => {
@@ -332,6 +340,10 @@ const createUser = async (req, res) => {
       email,
       password,
       role,
+      avatar,
+      phone,
+      location,
+      bio,
     } = req.body;
 
     const hashedPassword =
@@ -344,15 +356,23 @@ const createUser = async (req, res) => {
         full_name,
         email,
         password,
-        role
+        role,
+        avatar,
+        phone,
+        location,
+        bio
       )
-      VALUES (?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         full_name,
         email,
         hashedPassword,
         role,
+        avatar,
+        phone,
+        location,
+        bio,
       ],
       (err) => {
         if (err)
@@ -379,6 +399,10 @@ const updateUser = (req, res) => {
     full_name,
     email,
     role,
+    avatar,
+    phone,
+    location,
+    bio,
   } = req.body;
 
   db.query(
@@ -387,13 +411,21 @@ const updateUser = (req, res) => {
     SET
       full_name = ?,
       email = ?,
-      role = ?
+      role = ?,
+      avatar = ?,
+      phone = ?,
+      location = ?,
+      bio = ?
     WHERE id = ?
     `,
     [
       full_name,
       email,
       role,
+      avatar,
+      phone,
+      location,
+      bio,
       userId,
     ],
     (err) => {

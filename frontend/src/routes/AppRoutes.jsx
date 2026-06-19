@@ -8,6 +8,14 @@ import AllTasks from "../pages/Tasks/AllTasks";
 import MyTasks from "../pages/Tasks/MyTasks";
 import Profile from "../pages/Profile/Profile";
 import AdminDashboard from "../pages/Admin/AdminDashboard";
+import AdminUsers from "../pages/Admin/AdminUsers";
+import AdminProjects from "../pages/Admin/AdminProjects";
+import AdminTasks from "../pages/Admin/AdminTasks";
+import AdminProjectMembers from "../pages/Admin/AdminProjectMembers";
+import AdminComments from "../pages/Admin/AdminComments";
+import AdminNotifications from "../pages/Admin/AdminNotifications";
+import AdminAttachments from "../pages/Admin/AdminAttachments";
+import AdminActivityLogs from "../pages/Admin/AdminActivityLogs";
 
 function AppRoutes() {
   return (

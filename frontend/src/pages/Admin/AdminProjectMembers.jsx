@@ -1,9 +1,5 @@
-function AdminUsers() {
-  return (
-    <div>
-      <h1>Admin Users</h1>
-    </div>
-  );
+function AdminProjectMembers() {
+  return <h1>Admin Project Members</h1>;
 }
 
-export default AdminUsers;
+export default AdminProjectMembers;

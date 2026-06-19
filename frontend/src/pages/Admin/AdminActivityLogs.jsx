@@ -1,9 +1,5 @@
-function AdminUsers() {
-  return (
-    <div>
-      <h1>Admin Users</h1>
-    </div>
-  );
+function AdminActivityLogs() {
+  return <h1>Admin Activity Logs</h1>;
 }
 
-export default AdminUsers;
+export default AdminActivityLogs;
