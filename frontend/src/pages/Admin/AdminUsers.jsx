@@ -568,85 +568,304 @@ function AdminUsers() {
 
       {/* ADD USER */}
 
-      {showAddModal && (
-        <div className="modal d-block">
+     {/* ADD USER */}
+
+{showAddModal && (
+  <>
+    <div
+      className="position-fixed top-0 start-0 w-100 h-100"
+      style={{
+        background: "rgba(15,23,42,.65)",
+        backdropFilter: "blur(8px)",
+        zIndex: 1050,
+      }}
+      onClick={() => setShowAddModal(false)}
+    />
+
+    <div
+      className="position-fixed top-50 start-50 translate-middle"
+      style={{
+        zIndex: 1060,
+        width: "92%",
+        maxWidth: "800px",
+        maxHeight: "90vh",
+        overflowY: "auto",
+      }}
+    >
+      <div
+        className="card border-0 shadow-lg overflow-hidden"
+        style={{
+          borderRadius: "24px",
+        }}
+      >
+        {/* HEADER */}
+
         <div
-  className="modal-dialog"
-  style={{
-    maxWidth: "650px",
-  }}
->
-            <div className="modal-content">
+          className="text-center border-bottom"
+          style={{
+            background: "#fff",
+            padding: "32px",
+          }}
+        >
+          <div
+            className="mx-auto mb-3 d-flex align-items-center justify-content-center"
+            style={{
+              width: "90px",
+              height: "90px",
+              borderRadius: "50%",
+              background:
+                "linear-gradient(135deg,#2563eb,#3b82f6)",
+              color: "#fff",
+              fontSize: "34px",
+              fontWeight: "700",
+            }}
+          >
+            +
+          </div>
 
-              <div className="modal-header">
-                <h5>Add User</h5>
-              </div>
+          <h3
+            className="fw-bold mb-1"
+            style={{
+              color: "#111827",
+            }}
+          >
+            Add New Team Member
+          </h3>
 
-              <div className="modal-body">
+          <p
+            className="mb-0"
+            style={{
+              color: "#6b7280",
+            }}
+          >
+            Create a new account and assign permissions
+          </p>
+        </div>
 
-                <input
-                  className="form-control mb-3"
-                  placeholder="Full Name"
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      full_name:
-                        e.target.value,
-                    })
-                  }
-                />
+        {/* BODY */}
 
-                <input
-                  className="form-control mb-3"
-                  placeholder="Email"
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      email:
-                        e.target.value,
-                    })
-                  }
-                />
+        <div
+          className="p-4"
+          style={{
+            background: "#fff",
+          }}
+        >
+          <div className="row g-3">
 
-                <input
-                  type="password"
-                  className="form-control mb-3"
-                  placeholder="Password"
-                  onChange={(e) =>
-                    setFormData({
-                      ...formData,
-                      password:
-                        e.target.value,
-                    })
-                  }
-                />
+            <div className="col-md-6">
+              <label className="fw-semibold mb-2">
+                Full Name
+              </label>
 
-              </div>
-
-              <div className="modal-footer">
-
-                <button
-                  className="btn btn-secondary"
-                  onClick={() =>
-                    setShowAddModal(false)
-                  }
-                >
-                  Cancel
-                </button>
-
-                <button
-                  className="btn btn-primary"
-                  onClick={createUser}
-                >
-                  Create User
-                </button>
-
-              </div>
-
+              <input
+                type="text"
+                className="form-control shadow-sm"
+                placeholder="John Doe"
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    full_name: e.target.value,
+                  })
+                }
+                style={{
+                  height: "52px",
+                  borderRadius: "14px",
+                }}
+              />
             </div>
+
+            <div className="col-md-6">
+              <label className="fw-semibold mb-2">
+                Email
+              </label>
+
+              <input
+                type="email"
+                className="form-control shadow-sm"
+                placeholder="john@email.com"
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    email: e.target.value,
+                  })
+                }
+                style={{
+                  height: "52px",
+                  borderRadius: "14px",
+                }}
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="fw-semibold mb-2">
+                Password
+              </label>
+
+              <input
+                type="password"
+                className="form-control shadow-sm"
+                placeholder="********"
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    password: e.target.value,
+                  })
+                }
+                style={{
+                  height: "52px",
+                  borderRadius: "14px",
+                }}
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="fw-semibold mb-2">
+                Role
+              </label>
+
+              <select
+                className="form-select shadow-sm"
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    role: e.target.value,
+                  })
+                }
+                style={{
+                  height: "52px",
+                  borderRadius: "14px",
+                }}
+              >
+                <option value="team_member">
+                  Team Member
+                </option>
+
+                <option value="project_manager">
+                  Project Manager
+                </option>
+
+                <option value="admin">
+                  Admin
+                </option>
+              </select>
+            </div>
+
+            <div className="col-md-6">
+              <label className="fw-semibold mb-2">
+                Phone
+              </label>
+
+              <input
+                type="text"
+                className="form-control shadow-sm"
+                placeholder="+383..."
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    phone: e.target.value,
+                  })
+                }
+                style={{
+                  height: "52px",
+                  borderRadius: "14px",
+                }}
+              />
+            </div>
+
+            <div className="col-md-6">
+              <label className="fw-semibold mb-2">
+                Location
+              </label>
+
+              <input
+                type="text"
+                className="form-control shadow-sm"
+                placeholder="Kosovo"
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    location: e.target.value,
+                  })
+                }
+                style={{
+                  height: "52px",
+                  borderRadius: "14px",
+                }}
+              />
+            </div>
+
+            <div className="col-12">
+              <label className="fw-semibold mb-2">
+                Profile Photo
+              </label>
+
+              <input
+                type="file"
+                className="form-control shadow-sm"
+                accept="image/*"
+                style={{
+                  borderRadius: "14px",
+                }}
+              />
+            </div>
+
+            <div className="col-12">
+              <label className="fw-semibold mb-2">
+                Bio
+              </label>
+
+              <textarea
+                rows="4"
+                className="form-control shadow-sm"
+                placeholder="Write a short bio..."
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    bio: e.target.value,
+                  })
+                }
+                style={{
+                  borderRadius: "14px",
+                  resize: "none",
+                }}
+              />
+            </div>
+
           </div>
         </div>
-      )}
+
+        {/* FOOTER */}
+
+        <div
+          className="d-flex justify-content-end gap-3 p-4 border-top"
+        >
+          <button
+            className="btn btn-light px-4"
+            onClick={() =>
+              setShowAddModal(false)
+            }
+          >
+            Cancel
+          </button>
+
+          <button
+            className="btn px-4 fw-semibold"
+            style={{
+              background:
+                "linear-gradient(135deg,#2563eb,#3b82f6)",
+              color: "#fff",
+              border: "none",
+              borderRadius: "12px",
+            }}
+            onClick={createUser}
+          >
+            Create User
+          </button>
+        </div>
+      </div>
+    </div>
+  </>
+)}
 
      {/* EDIT USER */}
 
