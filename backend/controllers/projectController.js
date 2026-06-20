@@ -220,18 +220,105 @@ const getAllProjects = (req, res) => {
   db.query(
     `
     SELECT
-      p.*,
-      u.full_name AS created_by_name
+      p.id,
+      p.title,
+      p.description,
+      p.status,
+      p.priority,
+      p.due_date,
+      p.created_at,
+
+      u.full_name AS created_by_name,
+
+      COUNT(DISTINCT pm.user_id) AS membersCount,
+
+      COUNT(DISTINCT t.id) AS totalTasks,
+
+      SUM(
+        CASE
+          WHEN t.status = 'done'
+          THEN 1
+          ELSE 0
+        END
+      ) AS completedTasks,
+
+      CASE
+        WHEN COUNT(DISTINCT t.id) = 0
+        THEN 0
+        ELSE ROUND(
+          (
+            SUM(
+              CASE
+                WHEN t.status = 'done'
+                THEN 1
+                ELSE 0
+              END
+            ) * 100
+          ) /
+          COUNT(DISTINCT t.id)
+        )
+      END AS progress
+
     FROM projects p
+
     LEFT JOIN users u
       ON p.created_by = u.id
+
+    LEFT JOIN project_members pm
+      ON p.id = pm.project_id
+
+    LEFT JOIN tasks t
+      ON p.id = t.project_id
+
+    GROUP BY p.id
+
     ORDER BY p.created_at DESC
     `,
-    (err, result) => {
+    (err, projects) => {
+
       if (err)
         return res.status(500).json(err);
 
-      res.json(result);
+      if (projects.length === 0)
+        return res.json([]);
+
+      const ids =
+        projects.map((p) => p.id);
+
+      db.query(
+        `
+        SELECT
+          pm.project_id,
+          u.id,
+          u.full_name,
+          u.avatar
+        FROM project_members pm
+
+        JOIN users u
+          ON u.id = pm.user_id
+
+        WHERE pm.project_id IN (?)
+        `,
+        [ids],
+        (err, members) => {
+
+          if (err)
+            return res.status(500).json(err);
+
+          const finalProjects =
+            projects.map((project) => ({
+              ...project,
+              members:
+                members.filter(
+                  (m) =>
+                    m.project_id ===
+                    project.id
+                ),
+            }));
+
+          res.json(finalProjects);
+        }
+      );
     }
   );
 };
@@ -260,6 +347,116 @@ const getProjectById = (req, res) => {
       }
 
       res.json(result[0]);
+    }
+  );
+};
+const getProjectDetails = (
+  req,
+  res
+) => {
+
+  const projectId =
+    req.params.id;
+
+  db.query(
+    `
+    SELECT *
+    FROM projects
+    WHERE id = ?
+    `,
+    [projectId],
+    (err, projectResult) => {
+
+      if (err)
+        return res.status(500).json(err);
+
+      if (
+        projectResult.length === 0
+      ) {
+        return res
+          .status(404)
+          .json({
+            message:
+              "Project not found",
+          });
+      }
+
+      const project =
+        projectResult[0];
+
+      db.query(
+        `
+        SELECT
+          t.*,
+          u.full_name,
+          u.avatar
+        FROM tasks t
+
+        LEFT JOIN users u
+          ON u.id =
+          t.assigned_to
+
+        WHERE t.project_id = ?
+        `,
+        [projectId],
+        (err, tasks) => {
+
+          if (err)
+            return res.status(500).json(err);
+
+          db.query(
+            `
+            SELECT
+              u.id,
+              u.full_name,
+              u.email,
+              u.role,
+              u.avatar
+            FROM project_members pm
+
+            JOIN users u
+              ON u.id =
+              pm.user_id
+
+            WHERE pm.project_id = ?
+            `,
+            [projectId],
+            (err, members) => {
+
+              if (err)
+                return res
+                  .status(500)
+                  .json(err);
+
+              const total =
+                tasks.length;
+
+              const done =
+                tasks.filter(
+                  (t) =>
+                    t.status ===
+                    "done"
+                ).length;
+
+              const progress =
+                total > 0
+                  ? Math.round(
+                      (done /
+                        total) *
+                        100
+                    )
+                  : 0;
+
+              res.json({
+                ...project,
+                progress,
+                tasks,
+                members,
+              });
+            }
+          );
+        }
+      );
     }
   );
 };
@@ -401,4 +598,5 @@ module.exports = {
   createProject,
   updateProject,
   deleteProject,
+  getProjectDetails,
 };

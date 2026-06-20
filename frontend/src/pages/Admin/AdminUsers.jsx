@@ -367,10 +367,12 @@ function AdminUsers() {
 
           <img
   src={
-    user.avatar
-      ? `http://localhost:5000${user.avatar}`
-      : `https://ui-avatars.com/api/?name=${user.full_name}`
-  }
+  user.avatar
+    ? user.avatar.startsWith("http")
+      ? user.avatar
+      : `http://localhost:5000${user.avatar}`
+    : `https://ui-avatars.com/api/?name=${user.full_name}`
+}
   alt=""
   className="rounded-circle border border-3 border-white shadow"
   style={{

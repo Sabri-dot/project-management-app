@@ -33,6 +33,7 @@ const {
 const {
   getAllProjects,
   getProjectById,
+  getProjectDetails,
   createProject,
   updateProject,
   deleteProject,
@@ -150,11 +151,19 @@ router.get(
 );
 
 router.get(
+  "/projects/details/:id",
+  verifyToken,
+  adminMiddleware,
+  getProjectDetails
+);
+
+router.get(
   "/projects/:id",
   verifyToken,
   adminMiddleware,
   getProjectById
 );
+
 
 router.post(
   "/projects",

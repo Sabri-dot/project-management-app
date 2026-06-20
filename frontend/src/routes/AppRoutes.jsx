@@ -16,6 +16,7 @@ import AdminComments from "../pages/Admin/AdminComments";
 import AdminNotifications from "../pages/Admin/AdminNotifications";
 import AdminAttachments from "../pages/Admin/AdminAttachments";
 import AdminActivityLogs from "../pages/Admin/AdminActivityLogs";
+import AdminProjectDetails from "../pages/Admin/AdminProjectDetails";
 
 function AppRoutes() {
   return (
@@ -69,7 +70,7 @@ function AppRoutes() {
 <Route path="/admin/notifications" element={<AdminNotifications />} />
 <Route path="/admin/attachments" element={<AdminAttachments />} />
 <Route path="/admin/activity-logs" element={<AdminActivityLogs />} />
-
+<Route path="/admin/projects/:id"element={<AdminProjectDetails />}/>
       </Routes>
     </BrowserRouter>
   );
