@@ -275,12 +275,16 @@ const startTask = (req, res) => {
 ========================= */
 
 const getAdminTasks = (req, res) => {
+
+  console.log("ADMIN TASKS ROUTE HIT");
+
   db.query(
     `
     SELECT
       t.*,
       p.title AS project_name,
-      u.full_name AS assigned_user
+      u.full_name AS assigned_user,
+      u.avatar AS assigned_avatar
     FROM tasks t
     LEFT JOIN projects p
       ON t.project_id = p.id
@@ -289,8 +293,11 @@ const getAdminTasks = (req, res) => {
     ORDER BY t.created_at DESC
     `,
     (err, result) => {
-      if (err)
+
+      if (err) {
+        console.log(err);
         return res.status(500).json(err);
+      }
 
       res.json(result);
     }

@@ -229,7 +229,7 @@ router.get(
   "/tasks",
   verifyToken,
   adminMiddleware,
-  getAllTasks
+  getAdminTasks
 );
 
 router.get(
