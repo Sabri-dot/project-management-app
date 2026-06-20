@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 
 function ProjectDetails() {
   const { id } = useParams();
@@ -42,17 +42,7 @@ function ProjectDetails() {
 
       {/* BACK */}
       <div className="mb-3">
-       <a
-  href="/admin/projects"
-  className="text-decoration-none"
-  style={{
-    color: "#475569",
-    fontSize: "22px",
-    fontWeight: "600",
-  }}
->
-          ← Back to Projects
-        </a>
+    
       </div>
 
       <div className="row g-4">
