@@ -101,12 +101,16 @@ function ProjectDetails() {
 
            <h2
   style={{
-    fontSize: "52px",
+    fontSize: "36px",
     fontWeight: "800",
     color: "#0f172a",
     marginBottom: "16px",
+    lineHeight: "1.2",
+    wordBreak: "break-word",
   }}
->{project.title}</h2>
+>
+  {project.title}
+</h2>
 
             <p
   style={{

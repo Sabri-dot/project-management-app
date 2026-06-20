@@ -430,6 +430,7 @@ style={{
   transition: "all .25s ease",
   boxShadow:
     "0 8px 25px rgba(37,99,235,0.08)",
+    position: "relative",
 }}
 >
     <div className="d-flex justify-content-between mb-4">
@@ -508,31 +509,8 @@ style={{
       </span>
 
     </div>
-   <div className="d-flex gap-2 mt-3">
-
-  <button
-    className="btn btn-sm btn-warning"
-    onClick={(e) => {
-      e.stopPropagation();
-      setEditingProject(project);
-      setShowEditModal(true);
-    }}
-  >
-    Edit
-  </button>
-
-  <button
-    className="btn btn-sm btn-danger"
-    onClick={(e) => {
-      e.stopPropagation();
-      setDeletingProjectId(project.id);
-      setShowDeleteModal(true);
-    }}
-  >
-    Delete
-  </button>
-
-</div>
+ 
+  
     <div
   style={{
     height: "12px",
@@ -554,38 +532,77 @@ style={{
     </div>
 
     <div
-      className="d-flex justify-content-between align-items-center mt-4"
-    >
-      <div
-        style={{
-          display: "flex",
-        }}
-      >
-        {project.members?.slice(0, 4).map((member, index) => (
-  <img
-    key={member.id}
-    src={member.avatar || "https://i.pravatar.cc/150"}
-    title={member.name || member.full_name}
-    style={{
-      width: "40px",
-      height: "40px",
-      borderRadius: "50%",
-      marginLeft: index === 0 ? "0" : "-12px",
-    }}
-  />
-))}
-      </div>
+  className="d-flex justify-content-between align-items-center mt-4"
+>
 
-      <div
+  {/* AVATARS */}
+  <div
+    style={{
+      display: "flex",
+    }}
+  >
+    {project.members?.slice(0, 4).map((member, index) => (
+      <img
+        key={member.id}
+        src={
+          member.avatar ||
+          "https://i.pravatar.cc/150"
+        }
+        title={
+          member.name ||
+          member.full_name
+        }
         style={{
-          color: "#64748b",
-          fontSize: "15px",
+          width: "40px",
+          height: "40px",
+          borderRadius: "50%",
+          marginLeft:
+            index === 0 ? "0" : "-12px",
         }}
-      >
-        {project.completedTasks}/
-        {project.totalTasks}
-      </div>
-    </div>
+      />
+    ))}
+  </div>
+
+  {/* EDIT DELETE */}
+  <div className="d-flex gap-2">
+
+    <button
+      className="btn btn-sm btn-warning"
+      onClick={(e) => {
+        e.stopPropagation();
+        setEditingProject(project);
+        setShowEditModal(true);
+      }}
+    >
+      Edit
+    </button>
+
+    <button
+      className="btn btn-sm btn-danger"
+      onClick={(e) => {
+        e.stopPropagation();
+        setDeletingProjectId(project.id);
+        setShowDeleteModal(true);
+      }}
+    >
+      Delete
+    </button>
+
+  </div>
+
+  {/* TASKS */}
+  <div
+    style={{
+      color: "#64748b",
+      fontSize: "15px",
+      fontWeight: "600",
+    }}
+  >
+    {project.completedTasks}/
+    {project.totalTasks}
+  </div>
+
+</div>
 
   </div>
 </div>
@@ -596,11 +613,9 @@ style={{
       )}
       <Modal
   show={showCreateModal}
-  onHide={() =>
-    setShowCreateModal(false)
-  }
+  onHide={() => setShowCreateModal(false)}
   centered
-  size="xl"
+  size="lg"
 >
 
   <Modal.Header closeButton>
@@ -819,6 +834,7 @@ style={{
   show={showEditModal}
   onHide={() => setShowEditModal(false)}
   centered
+  size="lg"
 >
   <Modal.Header closeButton>
     <Modal.Title>Edit Project</Modal.Title>
