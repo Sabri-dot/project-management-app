@@ -9,6 +9,34 @@ function AdminProjects() {
   const [filteredProjects, setFilteredProjects] =
     useState([]);
 
+    const [toast, setToast] = useState({
+  show: false,
+  message: "",
+  type: "success", 
+});
+
+  
+const showToast = (message, type = "success") => {
+  setToast({
+    show: true,
+    message,
+    type,
+  });
+
+  setTimeout(() => {
+    setToast({
+      show: false,
+      message: "",
+      type: "success",
+    });
+  }, 4000);
+};
+    const [showEditModal, setShowEditModal] = useState(false);
+const [editingProject, setEditingProject] = useState(null);
+
+const [showDeleteModal, setShowDeleteModal] = useState(false);
+const [deletingProjectId, setDeletingProjectId] = useState(null);
+
  const [loading, setLoading] = useState(false);
  
  const [pageLoading, setPageLoading] = useState(true);
@@ -125,16 +153,63 @@ setCreating(true);
 
     setShowCreateModal(false);
 
-    alert("Project created successfully"); 
+    showToast("Project Created successfully", "success");
 
   } catch (err) {
     console.log(err);
-    alert("Error creating project");
+     showToast("Error creating project", "danger");
   } finally {
   setCreating(false);
 }
   
 };
+const handleEditProject = async () => {
+  try {
+    await axios.put(
+      `http://localhost:5000/api/admin/projects/${editingProject.id}`,
+      {
+        title: editingProject.title,
+        description: editingProject.description,
+        status: editingProject.status,
+        priority: editingProject.priority,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    await fetchProjects();
+
+    setShowEditModal(false);
+    setEditingProject(null);
+
+    showToast("Project edited successfully", "success");
+  } catch (err) {
+    console.log(err);
+ showToast("Error editing project", "danger");
+  }
+};
+const handleDeleteProject = async () => {
+  try {
+    await axios.delete(
+      `http://localhost:5000/api/admin/projects/${deletingProjectId}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    await fetchProjects();
+
+    setShowDeleteModal(false);
+    setDeletingProjectId(null);
+
+   showToast("Project deleted successfully", "success");
+  } catch (err) {
+    console.log(err);
+    showToast("Error deleting project", "danger");
+  }
+};
+
  useEffect(() => {
   let filtered = [...projects];
 
@@ -433,7 +508,31 @@ style={{
       </span>
 
     </div>
+   <div className="d-flex gap-2 mt-3">
 
+  <button
+    className="btn btn-sm btn-warning"
+    onClick={(e) => {
+      e.stopPropagation();
+      setEditingProject(project);
+      setShowEditModal(true);
+    }}
+  >
+    Edit
+  </button>
+
+  <button
+    className="btn btn-sm btn-danger"
+    onClick={(e) => {
+      e.stopPropagation();
+      setDeletingProjectId(project.id);
+      setShowDeleteModal(true);
+    }}
+  >
+    Delete
+  </button>
+
+</div>
     <div
   style={{
     height: "12px",
@@ -716,6 +815,131 @@ style={{
   </Modal.Footer>
 
 </Modal>
+<Modal
+  show={showEditModal}
+  onHide={() => setShowEditModal(false)}
+  centered
+>
+  <Modal.Header closeButton>
+    <Modal.Title>Edit Project</Modal.Title>
+  </Modal.Header>
+
+  <Modal.Body>
+    {editingProject && (
+      <>
+        <input
+          className="form-control mb-3"
+          value={editingProject.title}
+          onChange={(e) =>
+            setEditingProject({
+              ...editingProject,
+              title: e.target.value,
+            })
+          }
+        />
+
+        <textarea
+          className="form-control mb-3"
+          rows="4"
+          value={editingProject.description}
+          onChange={(e) =>
+            setEditingProject({
+              ...editingProject,
+              description: e.target.value,
+            })
+          }
+        />
+
+        <select
+          className="form-select mb-3"
+          value={editingProject.status}
+          onChange={(e) =>
+            setEditingProject({
+              ...editingProject,
+              status: e.target.value,
+            })
+          }
+        >
+          <option value="planning">Planning</option>
+          <option value="active">Active</option>
+          <option value="completed">Completed</option>
+          <option value="on_hold">On Hold</option>
+        </select>
+
+        <select
+          className="form-select"
+          value={editingProject.priority}
+          onChange={(e) =>
+            setEditingProject({
+              ...editingProject,
+              priority: e.target.value,
+            })
+          }
+        >
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+      </>
+    )}
+  </Modal.Body>
+
+  <Modal.Footer>
+    <button className="btn btn-primary" onClick={handleEditProject}>
+      Save Changes
+    </button>
+
+    <button className="btn btn-light" onClick={() => setShowEditModal(false)}>
+      Cancel
+    </button>
+  </Modal.Footer>
+</Modal>
+<Modal
+  show={showDeleteModal}
+  onHide={() => setShowDeleteModal(false)}
+  centered
+>
+  <Modal.Header closeButton>
+    <Modal.Title>Confirm Delete</Modal.Title>
+  </Modal.Header>
+
+  <Modal.Body>
+    Are you sure you want to delete this project?
+  </Modal.Body>
+
+  <Modal.Footer>
+    <button className="btn btn-danger" onClick={handleDeleteProject}>
+      Delete
+    </button>
+
+    <button className="btn btn-light" onClick={() => setShowDeleteModal(false)}>
+      Cancel
+    </button>
+  </Modal.Footer>
+</Modal>
+{toast.show && (
+  <div
+    style={{
+      position: "fixed",
+      top: "20px",
+      right: "20px",
+      zIndex: 9999,
+      minWidth: "280px",
+      padding: "14px 18px",
+      borderRadius: "12px",
+      color: "#fff",
+      fontWeight: "600",
+      background:
+        toast.type === "success"
+          ? "linear-gradient(135deg,#22c55e,#16a34a)"
+          : "linear-gradient(135deg,#ef4444,#dc2626)",
+      boxShadow: "0 10px 30px rgba(0,0,0,0.2)",
+      animation: "slideIn 0.3s ease",
+    }}
+  >
+    {toast.message}
+  </div>
+)}
     </div>
   );
 }
