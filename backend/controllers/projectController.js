@@ -108,9 +108,13 @@ sql += `
 
       const finalProjects = projects.map((project) => ({
         ...project,
-        members: members.filter(
-          (m) => m.project_id === project.id
-        ),
+        members: members
+  .filter((m) => m.project_id === project.id)
+  .map((m) => ({
+    id: m.id,
+    name: m.full_name,
+    avatar: m.avatar,
+  })),
       }));
 
       res.json(finalProjects);
@@ -308,12 +312,13 @@ const getAllProjects = (req, res) => {
           const finalProjects =
             projects.map((project) => ({
               ...project,
-              members:
-                members.filter(
-                  (m) =>
-                    m.project_id ===
-                    project.id
-                ),
+              members: members
+  .filter((m) => m.project_id === project.id)
+  .map((m) => ({
+    id: m.id,
+    name: m.full_name,
+    avatar: m.avatar,
+  })),
             }));
 
           res.json(finalProjects);
@@ -466,6 +471,7 @@ const createProject = (req, res) => {
     description,
     status,
     priority,
+    due_date,
   } = req.body;
 
   const createdBy = req.user.id;
@@ -473,20 +479,22 @@ const createProject = (req, res) => {
   db.query(
     `
     INSERT INTO projects
-    (
-      title,
-      description,
-      status,
-      priority,
-      created_by
-    )
-    VALUES (?, ?, ?, ?, ?)
+(
+ title,
+ description,
+ status,
+ priority,
+ due_date,
+ created_by
+)
+   VALUES (?, ?, ?, ?, ?, ?)
     `,
     [
       title,
       description,
       status,
       priority,
+      due_date,
       createdBy,
     ],
     (err, result) => {

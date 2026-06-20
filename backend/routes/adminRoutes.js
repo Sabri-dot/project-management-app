@@ -12,6 +12,9 @@ const adminMiddleware =
 
   const uploadAvatar =
   require("../middleware/upload");
+
+  const { addProjectMember } =
+require("../controllers/projectController");
 /* USERS + DASHBOARD */
 
 const {
@@ -369,6 +372,12 @@ router.delete(
   verifyToken,
   adminMiddleware,
   deleteActivityLog
+);
+router.post(
+  "/projects/:id/members",
+  verifyToken,
+  adminMiddleware,
+  addProjectMember
 );
 /* =========================
    DASHBOARD
