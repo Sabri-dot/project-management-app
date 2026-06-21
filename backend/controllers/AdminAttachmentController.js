@@ -6,25 +6,28 @@ const db = require("../config/db");
 
 const getAllAttachments = (req, res) => {
   db.query(
-    `
-    SELECT
-      a.*,
-      t.title AS task_title,
-      u.full_name AS uploaded_by_name
-    FROM attachments a
-    LEFT JOIN tasks t
-      ON a.task_id = t.id
-    LEFT JOIN users u
-      ON a.uploaded_by = u.id
-    ORDER BY a.created_at DESC
-    `,
-    (err, result) => {
-      if (err)
-        return res.status(500).json(err);
+  `
+  SELECT
+    a.*,
+    t.title AS task_title,
+    p.title AS project_title,
+    u.full_name AS uploaded_by_name
+  FROM attachments a
+  LEFT JOIN tasks t ON a.task_id = t.id
+  LEFT JOIN projects p ON t.project_id = p.id
+  LEFT JOIN users u ON a.uploaded_by = u.id
+  ORDER BY a.created_at DESC
+  `,
+  (err, result) => {
+    if (err) return res.status(500).json(err);
+  const fixedResult = result.map((a) => ({
+  ...a,
+  file_url: a.file_url.replace(/\\/g, "/"),
+}));
 
-      res.json(result);
-    }
-  );
+res.json(fixedResult);
+  }
+);
 };
 
 /* =========================
