@@ -506,6 +506,25 @@ const getTaskFormData = (req, res) => {
     }
   );
 };
+const getProjectAllTasks = (req, res) => {
+  const projectId = req.params.projectId;
+
+  const sql = `
+    SELECT
+      t.*,
+      u.full_name AS assigned_name,
+      u.avatar AS assigned_avatar
+    FROM tasks t
+    LEFT JOIN users u ON t.assigned_to = u.id
+    WHERE t.project_id = ?
+    ORDER BY t.created_at DESC
+  `;
+
+  db.query(sql, [projectId], (err, result) => {
+    if (err) return res.status(500).json(err);
+    res.json(result);
+  });
+};
 module.exports = {
   getMyTasks,
   getAllTasks,
@@ -519,4 +538,5 @@ module.exports = {
   updateTask,
   deleteTask,
   getTaskFormData,
+  getProjectAllTasks,
 };

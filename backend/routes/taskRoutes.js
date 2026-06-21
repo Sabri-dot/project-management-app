@@ -11,7 +11,8 @@ const {
   getAllTasks,
   getProjectTasks,
   markTaskAsDone,
-  startTask
+  startTask,
+   getProjectAllTasks
 } = require(
   "../controllers/taskController"
 );
@@ -42,5 +43,10 @@ router.patch(
   "/:id/start",
   verifyToken,
   startTask
+);
+router.get(
+  "/project/:projectId/all",
+  verifyToken,
+  getProjectAllTasks
 );
 module.exports = router;

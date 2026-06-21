@@ -5,29 +5,36 @@ const db = require("../config/db");
 ========================= */
 
 const getAllComments = (req, res) => {
-  db.query(
-    `
-    SELECT
-      comments.id,
-      comments.comment,
-      comments.created_at,
+ db.query(
+  `
+  SELECT
+    comments.id,
+    comments.comment,
+    comments.created_at,
 
-      users.id AS user_id,
-      users.full_name,
+    users.id AS user_id,
+    users.full_name,
+    users.avatar,
 
-      tasks.id AS task_id,
-      tasks.title AS task_title
+    tasks.id AS task_id,
+    tasks.title AS task_title,
 
-    FROM comments
+    projects.id AS project_id,
+    projects.title AS project_title
 
-    LEFT JOIN users
-      ON comments.user_id = users.id
+  FROM comments
 
-    LEFT JOIN tasks
-      ON comments.task_id = tasks.id
+  LEFT JOIN users
+    ON comments.user_id = users.id
 
-    ORDER BY comments.created_at DESC
-    `,
+  LEFT JOIN tasks
+    ON comments.task_id = tasks.id
+
+  LEFT JOIN projects
+    ON tasks.project_id = projects.id
+
+  ORDER BY comments.created_at DESC
+  `,
     (err, result) => {
       if (err)
         return res.status(500).json(err);
