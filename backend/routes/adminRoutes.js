@@ -63,6 +63,7 @@ const {
   createTask,
   updateTask,
   deleteTask,
+  getTaskFormData,
 } = require("../controllers/taskController");
 
 /* NOTIFICATIONS */
@@ -231,7 +232,12 @@ router.get(
   adminMiddleware,
   getAdminTasks
 );
-
+router.get(
+  "/tasks/form-data",
+  verifyToken,
+  adminMiddleware,
+  getTaskFormData
+);
 router.get(
   "/tasks/:id",
   verifyToken,

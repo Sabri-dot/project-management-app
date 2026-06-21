@@ -465,6 +465,47 @@ const deleteTask = (req, res) => {
     }
   );
 };
+/* =========================
+   ADMIN FORM DATA
+========================= */
+
+const getTaskFormData = (req, res) => {
+
+  db.query(
+    `
+    SELECT id, title
+    FROM projects
+    ORDER BY title ASC
+    `,
+    (err, projects) => {
+
+      if (err)
+        return res.status(500).json(err);
+
+      db.query(
+        `
+        SELECT
+          id,
+          full_name,
+          role,
+          avatar
+        FROM users
+        ORDER BY full_name ASC
+        `,
+        (err, users) => {
+
+          if (err)
+            return res.status(500).json(err);
+
+          res.json({
+            projects,
+            users,
+          });
+        }
+      );
+    }
+  );
+};
 module.exports = {
   getMyTasks,
   getAllTasks,
@@ -477,4 +518,5 @@ module.exports = {
   createTask,
   updateTask,
   deleteTask,
+  getTaskFormData,
 };
