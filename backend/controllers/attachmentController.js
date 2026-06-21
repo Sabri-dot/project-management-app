@@ -5,11 +5,15 @@ const uploadAttachment = (
   res
 ) => {
 
+  console.log("BODY:", req.body);
+  console.log("FILE:", req.file);
+
   const taskId =
     req.body.task_id;
 
-  const userId =
-    req.user.id;
+ const userId =
+  req.body.uploaded_by ||
+  req.user.id;
 
   if (!req.file) {
 

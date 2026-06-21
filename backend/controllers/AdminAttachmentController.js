@@ -71,12 +71,18 @@ const getAttachmentById = (req, res) => {
 ========================= */
 
 const createAttachment = (req, res) => {
-  const {
-    task_id,
-    file_name,
-    file_url,
-    uploaded_by,
-  } = req.body;
+  const { task_id, uploaded_by } = req.body;
+
+  if (!req.file) {
+    return res.status(400).json({
+      message: "No file uploaded",
+    });
+  }
+
+  const file_name = req.file.filename;
+
+  const file_url =
+    req.file.path.replace(/\\/g, "/");
 
   db.query(
     `
@@ -115,28 +121,32 @@ const createAttachment = (req, res) => {
 const updateAttachment = (req, res) => {
   const attachmentId = req.params.id;
 
-  const {
-    task_id,
-    file_name,
-    file_url,
-    uploaded_by,
-  } = req.body;
+  if (!req.file) {
+    return res.status(400).json({
+      message: "No file uploaded",
+    });
+  }
+
+  const file_name =
+    req.file.filename;
+
+  const file_url =
+    req.file.path.replace(
+      /\\/g,
+      "/"
+    );
 
   db.query(
     `
     UPDATE attachments
     SET
-      task_id = ?,
       file_name = ?,
-      file_url = ?,
-      uploaded_by = ?
+      file_url = ?
     WHERE id = ?
     `,
     [
-      task_id,
       file_name,
       file_url,
-      uploaded_by,
       attachmentId,
     ],
     (err) => {

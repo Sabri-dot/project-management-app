@@ -14,6 +14,31 @@ function AdminAttachments() {
 
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [showNewModal, setShowNewModal] = useState(false);
+
+const [projects, setProjects] = useState([]);
+const [users, setUsers] = useState([]);
+const [tasks, setTasks] = useState([]);
+
+const [selectedProject, setSelectedProject] = useState("");
+const [selectedTask, setSelectedTask] = useState("");
+const [selectedUser, setSelectedUser] = useState("");
+
+const [showEditModal, setShowEditModal] =
+  useState(false);
+
+const [editAttachmentId, setEditAttachmentId] =
+  useState(null);
+
+const [editTask, setEditTask] =
+  useState("");
+
+const [editProject, setEditProject] =
+  useState("");
+
+const [editFile, setEditFile] =
+  useState(null);
 
   // FETCH
   const fetchAttachments = async () => {
@@ -33,10 +58,58 @@ function AdminAttachments() {
       setLoading(false);
     }
   };
+  const fetchDropdownData = async () => {
+  try {
+    const [p, u] = await Promise.all([
+      axios.get(
+        "http://localhost:5000/api/admin/projects",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      ),
+      axios.get(
+        "http://localhost:5000/api/admin/users",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      ),
+    ]);
 
+    setProjects(p.data);
+    setUsers(u.data);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+const handleProjectChange = async (
+  projectId
+) => {
+  setSelectedProject(projectId);
+
+  try {
+    const res = await axios.get(
+      `http://localhost:5000/api/tasks/project/${projectId}/all`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setTasks(res.data);
+  } catch (err) {
+    console.log(err);
+  }
+};
   useEffect(() => {
-    fetchAttachments();
-  }, []);
+  fetchAttachments();
+  fetchDropdownData();
+}, []);
 
   // SEARCH
   useEffect(() => {
@@ -72,6 +145,155 @@ function AdminAttachments() {
       setTimeout(() => setErrorMessage(""), 4000);
     }
   };
+  const handleCreateAttachment =
+  async () => {
+    try {
+      const formData =
+        new FormData();
+
+      formData.append(
+        "file",
+        selectedFile
+      );
+
+      formData.append(
+        "task_id",
+        selectedTask
+      );
+      formData.append(
+  "uploaded_by",
+  selectedUser
+);
+if (
+  !selectedUser ||
+  !selectedProject ||
+  !selectedTask ||
+  !selectedFile
+) {
+  setErrorMessage(
+    "Please fill all fields"
+  );
+
+  setTimeout(() => {
+    setErrorMessage("");
+  }, 5000);
+
+  return;
+}
+      await axios.post(
+        "http://localhost:5000/api/attachments",
+        formData,
+        {
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+            "Content-Type":
+              "multipart/form-data",
+          },
+        }
+      );
+
+      setShowNewModal(false);
+
+      setSelectedFile(null);
+      setSelectedProject("");
+      setSelectedTask("");
+      setSelectedUser("");
+
+      fetchAttachments();
+
+      setSuccessMessage(
+        "Attachment created successfully"
+      );
+
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 5000);
+    } catch (err) {
+      console.log(err);
+
+      setErrorMessage(
+        "Failed to create attachment"
+      );
+
+      setTimeout(() => {
+        setErrorMessage("");
+      }, 5000);
+    }
+  };
+  const handleEditAttachment =
+  async () => {
+if (!editFile) {
+
+  setErrorMessage(
+    "Please choose a file"
+  );
+
+  setTimeout(() => {
+    setErrorMessage("");
+  }, 5000);
+
+  return;
+}
+    try {
+
+      const formData =
+        new FormData();
+
+      formData.append(
+        "task_id",
+        editTask
+      );
+
+      if (editFile) {
+
+        formData.append(
+          "file",
+          editFile
+        );
+
+      }
+
+      await axios.put(
+        `http://localhost:5000/api/admin/attachments/${editAttachmentId}`,
+        formData,
+        {
+          headers: {
+            Authorization:
+              `Bearer ${token}`,
+            "Content-Type":
+              "multipart/form-data",
+          },
+        }
+      );
+
+      setShowEditModal(false);
+
+      fetchAttachments();
+
+      setSuccessMessage(
+        "Attachment updated successfully"
+      );
+
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 5000);
+
+    } catch (err) {
+
+      console.log(err);
+
+      setErrorMessage(
+        "Failed to update attachment"
+      );
+
+      setTimeout(() => {
+        setErrorMessage("");
+      }, 5000);
+
+    }
+
+  };
 
   return (
     <>
@@ -96,9 +318,47 @@ function AdminAttachments() {
         
         <h1 className="fw-bold mb-1">All Attachments</h1>
         <p className="text-secondary mb-3">{filtered.length} attachments</p>
+        <button
+  className="btn btn-primary mb-4"
+  onClick={() =>
+    setShowNewModal(true)
+  }
+>
+  + New Attachment
+</button>
 
-        {successMessage && <div className="alert alert-success">{successMessage}</div>}
-        {errorMessage && <div className="alert alert-danger">{errorMessage}</div>}
+      {successMessage && (
+  <div
+    className="alert alert-success"
+    style={{
+      position: "fixed",
+      top: "20px",
+      right: "20px",
+      zIndex: 999999,
+      minWidth: "300px",
+      boxShadow: "0 10px 30px rgba(0,0,0,.2)"
+    }}
+  >
+    {successMessage}
+  </div>
+)}
+
+{errorMessage && (
+  <div
+    className="alert alert-danger"
+    style={{
+      position: "fixed",
+      top: "20px",
+      right: "20px",
+      zIndex: 999999,
+      minWidth: "300px",
+      boxShadow: "0 10px 30px rgba(0,0,0,.2)"
+    }}
+  >
+    {errorMessage}
+  </div>
+)}
+       
 
         {/* SEARCH */}
         <input
@@ -148,17 +408,34 @@ function AdminAttachments() {
                   </small>
 
                   {/* DELETE */}
-                  <div className="mt-3">
-                    <button
-                      className="btn btn-danger btn-sm"
-                      onClick={() => {
-                        setDeleteId(a.id);
-                        setShowDeleteModal(true);
-                      }}
-                    >
-                      Delete
-                    </button>
-                  </div>
+                 <div className="mt-3 d-flex gap-2">
+
+  <button
+    className="btn btn-primary btn-sm"
+    onClick={() => {
+
+      setEditAttachmentId(a.id);
+
+      setEditTask(a.task_id);
+
+      setShowEditModal(true);
+
+    }}
+  >
+    Edit
+  </button>
+
+  <button
+    className="btn btn-danger btn-sm"
+    onClick={() => {
+      setDeleteId(a.id);
+      setShowDeleteModal(true);
+    }}
+  >
+    Delete
+  </button>
+
+</div>
 
                 </div>
               </div>
@@ -166,6 +443,8 @@ function AdminAttachments() {
 
           </div>
         )}
+       
+
 
         {/* DELETE MODAL */}
         {showDeleteModal && (
@@ -212,6 +491,242 @@ function AdminAttachments() {
             </div>
           </div>
         )}
+        {showEditModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,.6)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 99999,
+    }}
+  >
+    <div
+      style={{
+        width: "850px",
+        background: "#fff",
+        padding: "30px",
+        borderRadius: "25px",
+      }}
+    >
+    <h2 className="fw-bold mb-4">
+  ✏️ Edit Attachment
+</h2>
+
+<div
+  className="alert alert-info mb-3"
+>
+  Current File:
+  <strong>
+    {" "}
+    {attachments.find(
+      (a) =>
+        a.id === editAttachmentId
+    )?.file_name}
+  </strong>
+</div>
+
+
+
+
+      
+
+      <div className="mb-3">
+       <small className="text-secondary d-block mb-2">
+  <i>    Choose a new file if you want to replace the current one.</i>
+  </small>
+
+
+        <input
+          type="file"
+          className="form-control"
+          onChange={(e) =>
+            setEditFile(
+              e.target.files[0]
+            )
+          }
+        />
+      </div>
+
+      <div className="d-flex justify-content-end gap-2">
+        <button
+          className="btn btn-secondary"
+          onClick={() =>
+            setShowEditModal(false)
+          }
+        >
+          Cancel
+        </button>
+
+        <button
+          className="btn btn-primary"
+          onClick={
+            handleEditAttachment
+          }
+        >
+          Save Changes
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+        {showNewModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background:
+        "rgba(0,0,0,.6)",
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      zIndex: 99999,
+    }}
+  >
+    <div
+      style={{
+        width: "900px",
+        maxWidth: "95%",
+        background: "#fff",
+        borderRadius: "25px",
+        padding: "30px",
+      }}
+    >
+      <h2 className="fw-bold mb-4">
+        📎 Create New Attachment
+      </h2>
+
+      <div className="row">
+
+        <div className="col-md-4 mb-3">
+          <label className="fw-bold">
+            User
+          </label>
+
+          <select
+            className="form-control"
+            value={selectedUser}
+            onChange={(e) =>
+              setSelectedUser(
+                e.target.value
+              )
+            }
+          >
+            <option value="">
+              Select User
+            </option>
+
+            {users.map((u) => (
+              <option
+                key={u.id}
+                value={u.id}
+              >
+                {u.full_name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="col-md-4 mb-3">
+          <label className="fw-bold">
+            Project
+          </label>
+
+          <select
+            className="form-control"
+            value={selectedProject}
+            onChange={(e) =>
+              handleProjectChange(
+                e.target.value
+              )
+            }
+          >
+            <option value="">
+              Select Project
+            </option>
+
+            {projects.map((p) => (
+              <option
+                key={p.id}
+                value={p.id}
+              >
+                {p.title}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="col-md-4 mb-3">
+          <label className="fw-bold">
+            Task
+          </label>
+
+          <select
+            className="form-control"
+            value={selectedTask}
+            onChange={(e) =>
+              setSelectedTask(
+                e.target.value
+              )
+            }
+          >
+            <option value="">
+              Select Task
+            </option>
+
+            {tasks.map((t) => (
+              <option
+                key={t.id}
+                value={t.id}
+              >
+                {t.title}
+              </option>
+            ))}
+          </select>
+        </div>
+
+      </div>
+
+      <div className="mb-3">
+        <label className="fw-bold">
+          Upload File
+        </label>
+
+        <input
+          type="file"
+          className="form-control"
+          onChange={(e) =>
+            setSelectedFile(
+              e.target.files[0]
+            )
+          }
+        />
+      </div>
+
+      <div className="d-flex justify-content-end gap-2">
+        <button
+          className="btn btn-secondary"
+          onClick={() =>
+            setShowNewModal(false)
+          }
+        >
+          Cancel
+        </button>
+
+        <button
+          className="btn btn-primary"
+          onClick={
+            handleCreateAttachment
+          }
+        >
+          Create Attachment
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
       </div>
     </>

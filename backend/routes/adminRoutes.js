@@ -10,8 +10,8 @@ const verifyToken =
 const adminMiddleware =
   require("../middleware/adminMiddleware");
 
-  const uploadAvatar =
-  require("../middleware/upload");
+const upload =
+require("../middleware/upload");
 
   const { addProjectMember } =
 require("../controllers/projectController");
@@ -124,7 +124,7 @@ router.post(
   "/users",
   verifyToken,
   adminMiddleware,
-  uploadAvatar.single("avatar"),
+  upload.single("avatar"),
   createUser
 );
 
@@ -132,10 +132,9 @@ router.put(
   "/users/:id",
   verifyToken,
   adminMiddleware,
-  uploadAvatar.single("avatar"),
+  upload.single("avatar"),
   updateUser
 );
-
 router.delete(
   "/users/:id",
   verifyToken,
@@ -325,13 +324,16 @@ router.post(
   "/attachments",
   verifyToken,
   adminMiddleware,
+  upload.single("file"),
   createAttachment
 );
+
 
 router.put(
   "/attachments/:id",
   verifyToken,
   adminMiddleware,
+  upload.single("file"),
   updateAttachment
 );
 
