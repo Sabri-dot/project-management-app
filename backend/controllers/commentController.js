@@ -105,9 +105,9 @@ members.forEach((member) => {
   });
 
 });
-io.to("admins").emit("notification", {
-  message: `New comment on "${task.title}"`,
+io.to("admins").emit("admin_notification", {
   type: "comment",
+  message: `New comment on "${task.title}"`,
   createdAt: new Date(),
 });
 

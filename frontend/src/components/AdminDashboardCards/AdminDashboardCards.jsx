@@ -6,7 +6,7 @@ import {
   MdTrendingUp,
 } from "react-icons/md";
 
-import AdminLatestUsers from "../AdminLatestUsers/AdminLatestUsers";
+
 function AdminDashboardCards({
   dashboardData,
 }) {

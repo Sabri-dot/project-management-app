@@ -125,9 +125,9 @@ members.forEach((member) => {
   });
 
 });
-io.to("admins").emit("notification", {
-  message: `New attachment added to "${task.title}"`,
+io.to("admins").emit("admin_notification", {
   type: "attachment",
+  message: `Attachment added to "${task.title}"`,
   createdAt: new Date(),
 });
 

@@ -6,7 +6,7 @@ import ActivityChart from "../../components/ActivityChart/ActivityChart";
 import ProjectStatus from "../../components/ProjectStatus/ProjectStatus";
 import ActiveProjects from "../../components/ActiveProjects/ActiveProjects";
 import RecentActivity from "../../components/RecentActivity/RecentActivity";
-import AdminLatestUsers from "../../components/AdminLatestUsers/AdminLatestUsers";
+
 function AdminDashboard() {
   const [dashboardData, setDashboardData] =
     useState(null);
@@ -127,12 +127,7 @@ function AdminDashboard() {
       </div>
      <div className="mt-4">
 
-  <AdminLatestUsers
-    users={
-      dashboardData.latestUsers || []
-    }
-  />
-
+  
 </div>
 
     </MainLayout>

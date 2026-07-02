@@ -1,3 +1,4 @@
+console.log("MAINLAYOUT RENDERED");
 import Sidebar from "../components/Sidebar/Sidebar";
 import Navbar from "../components/Navbar/Navbar";
 

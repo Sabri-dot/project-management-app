@@ -1,3 +1,4 @@
+console.log("NAVBAR IS RENDERING");
 import { useState, useRef, useEffect } from "react";
 import { IoChevronDown } from "react-icons/io5";
 import { FiUser, FiLogOut, FiBell } from "react-icons/fi";
@@ -6,6 +7,7 @@ import { socket } from "../../socket";
 import notificationSound from "../../sounds/notification.mp3";
 
 function Navbar() {
+  console.log("Navbar Loaded");
   const [user, setUser] = useState(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
@@ -36,7 +38,17 @@ const [searchOpen, setSearchOpen] =
     audio.volume = 0.5;
     audio.play().catch(() => {});
   };
+useEffect(() => {
+  console.log("SOCKET INIT");
 
+  socket.on("connect", () => {
+    console.log("Socket connected:", socket.id);
+  });
+
+  return () => {
+    socket.off("connect");
+  };
+}, []);
   /* =========================
      SOCKET CONNECT
   ========================= */
@@ -51,20 +63,29 @@ const [searchOpen, setSearchOpen] =
   /* =========================
      GET USER
   ========================= */
-  useEffect(() => {
-    const fetchUser = async () => {
-      const token = localStorage.getItem("token");
+ /* =========================
+   GET USER
+========================= */
+useEffect(() => {
+  const fetchUser = async () => {
+    const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:5000/api/users/profile", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+    const res = await fetch("http://localhost:5000/api/users/profile", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-      const data = await res.json();
-      setUser(data);
-    };
+    const data = await res.json();
 
-    fetchUser();
-  }, []);
+    console.log("USER DATA:", data);
+    console.log("ROLE =", data.role);
+
+    setUser(data);
+  };
+
+  fetchUser();
+}, []);
 
   /* =========================
      GET NOTIFICATIONS (HISTORY)
@@ -87,66 +108,56 @@ const [searchOpen, setSearchOpen] =
   /* =========================
      SOCKET REALTIME
   ========================= */
-  useEffect(() => {
-  if (!user?.id) return;
+  
+useEffect(() => {
+  if (!user) return;
 
-  socket.connect();
+  console.log("USER READY:", user);
 
-  socket.emit("join", user.id);
+  socket.emit("join", user.user_id || user.id);
 
   if (user.role === "admin") {
-    socket.emit("join_admin");
+    console.log("ADMIN DETECTED");
+
+    socket.emit("join_admin", {
+      id: user.id,
+      role: user.role,
+    });
   }
 
-  const handleNotification = (data) => {
-      setNotifications((prev) => [data, ...prev]);
-      playSound();
-    };
+ const handleNotification = () => {
+  playSound();
+  fetchNotifications(); 
+};
+  socket.on("notification", handleNotification);
+  socket.on("admin_notification", handleNotification);
 
-    socket.on("notification", handleNotification);
+  socket.onAny((event, data) => {
+    console.log("SOCKET EVENT:", event, data);
+  });
 
-    return () => {
-      socket.off("notification", handleNotification);
-    };
-  }, [user]);
+  return () => {
+    socket.off("notification", handleNotification);
+    socket.off("admin_notification", handleNotification);
+  };
+}, [user]);
+ 
 
-  /* =========================
-     OUTSIDE CLICK
-  ========================= */
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (profileRef.current && !profileRef.current.contains(e.target)) {
-        setProfileOpen(false);
-      }
-      if (notifRef.current && !notifRef.current.contains(e.target)) {
-        setNotifOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const unreadCount = notifications.filter((n) => !n.isRead).length;
+ const unreadCount = notifications.filter((n) => n.is_read === 0).length;
 
   /* =========================
      MARK AS READ
   ========================= */
-  const markAsRead = async (id) => {
-    const token = localStorage.getItem("token");
+ const markAsRead = async (id) => {
+  const token = localStorage.getItem("token");
 
-    await fetch(`http://localhost:5000/api/notifications/${id}/read`, {
-      method: "PATCH",
-      headers: { Authorization: `Bearer ${token}` },
-    });
+  await fetch(`http://localhost:5000/api/notifications/${id}/read`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+  });
 
-    setNotifications((prev) =>
-      prev.map((n) =>
-        n.id === id ? { ...n, isRead: true } : n
-      )
-    );
-  };
-
+  fetchNotifications();
+};
   /* =========================
      DELETE NOTIFICATION
   ========================= */
@@ -287,76 +298,78 @@ const [searchOpen, setSearchOpen] =
 </div>
         <div className="d-flex align-items-center gap-3">
 
-          {/* NOTIFICATIONS */}
-          <div ref={notifRef} style={{ position: "relative" }}>
-            <FiBell size={22} onClick={() => setNotifOpen(!notifOpen)} />
+          {/* NOTIFICATIONS (ONLY FOR NON-ADMIN) */}
+{user?.role !== "admin" && (
+  <div ref={notifRef} style={{ position: "relative" }}>
+    <FiBell size={22} onClick={() => setNotifOpen(!notifOpen)} />
 
-            {unreadCount > 0 && (
-              <span style={{
-                position: "absolute",
-                top: -5,
-                right: -5,
-                background: "red",
-                color: "white",
-                fontSize: 10,
-                borderRadius: "50%",
-                width: 18,
-                height: 18,
-                textAlign: "center"
-              }}>
-                {unreadCount}
-              </span>
-            )}
+    {unreadCount > 0 && (
+      <span style={{
+        position: "absolute",
+        top: -5,
+        right: -5,
+        background: "red",
+        color: "white",
+        fontSize: 10,
+        borderRadius: "50%",
+        width: 18,
+        height: 18,
+        textAlign: "center"
+      }}>
+        {unreadCount}
+      </span>
+    )}
 
-            {notifOpen && (
-              <div className="shadow bg-white"
-                style={{
-                  position: "absolute",
-                  right: 0,
-                  top: 40,
-                  width: 320,
-                  borderRadius: 10,
-                  zIndex: 9999
-                }}>
+    {notifOpen && (
+      <div className="shadow bg-white"
+        style={{
+          position: "absolute",
+          right: 0,
+          top: 40,
+          width: 320,
+          borderRadius: 10,
+          zIndex: 9999
+        }}>
 
-                <div className="p-2 border-bottom fw-bold">
-                  Notifications
-                </div>
+        <div className="p-2 border-bottom fw-bold">
+          Notifications
+        </div>
 
-                {notifications.map((n) => (
-                  <div
-                    key={n.id}
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      padding: 10,
-                      background: n.isRead ? "#fff" : "#f1f5f9",
-                      borderBottom: "1px solid #eee"
-                    }}
-                  >
-                    <div
-                      style={{ flex: 1, cursor: "pointer" }}
-                      onClick={() => markAsRead(n.id)}
-                    >
-                      {n.message}
-                    </div>
+        {notifications.map((n) => (
+          <div
+            key={n.id}
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              padding: 10,
+              background: n.is_read ? "#fff" : "#f1f5f9",
+              borderBottom: "1px solid #eee"
+            }}
+          >
+            <div
+              style={{ flex: 1, cursor: "pointer" }}
+              onClick={() => markAsRead(n.id)}
+            >
+              {n.message}
+            </div>
 
-                    <button
-                      onClick={() => deleteNotification(n.id)}
-                      style={{
-                        border: "none",
-                        background: "transparent",
-                        color: "red",
-                        cursor: "pointer"
-                      }}
-                    >
-                      🗑
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <button
+              onClick={() => deleteNotification(n.id)}
+              style={{
+                border: "none",
+                background: "transparent",
+                color: "red",
+                cursor: "pointer"
+              }}
+            >
+              🗑
+            </button>
           </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
 
           {/* PROFILE */}
           <div ref={profileRef} style={{ position: "relative" }}>

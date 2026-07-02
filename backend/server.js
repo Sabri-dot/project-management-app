@@ -37,11 +37,10 @@ io.on("connection", (socket) => {
 
     console.log("JOIN OK:", room);
   });
-  socket.on("join_admin", () => {
+ socket.on("join_admin", () => {
   socket.join("admins");
-  console.log("Admin joined admins room");
+  console.log("ADMIN JOINED ROOM:", socket.id);
 });
-
   socket.on("disconnect", () => {
     console.log("User disconnected:", socket.id);
   });

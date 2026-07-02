@@ -200,9 +200,9 @@ WHERE id = ?
                     createdAt: new Date(),
                   });
                 });
-                io.to("admins").emit("notification", {
-  message: `Task "${task.title}" was completed`,
+                io.to("admins").emit("admin_notification", {
   type: "task_done",
+  message: `Task "${task.title}" completed`,
   createdAt: new Date(),
 });
                 
