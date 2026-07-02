@@ -1,6 +1,26 @@
 const db = require("../config/db");
 
 /* =========================
+   CHECK PROJECT OWNERSHIP
+========================= */
+const checkProjectOwnership = (projectId, userId, callback) => {
+  db.query(
+    `
+    SELECT id
+    FROM projects
+    WHERE id = ?
+    AND created_by = ?
+    `,
+    [projectId, userId],
+    (err, result) => {
+      if (err) return callback(err, false);
+      if (!result.length) return callback(null, false);
+      return callback(null, true);
+    }
+  );
+};
+
+/* =========================
    MY TASKS (ACTIVE)
 ========================= */
 const getMyTasks = (req, res) => {
@@ -14,37 +34,23 @@ SELECT
   tasks.priority,
   tasks.status,
   tasks.due_date,
-
   projects.title AS project_name,
-
   users.id AS manager_id,
   users.full_name AS manager_name,
   users.email AS manager_email,
   users.avatar AS manager_avatar,
   users.bio AS manager_bio,
   users.role AS manager_role
-
 FROM tasks
-
-JOIN projects
-  ON tasks.project_id = projects.id
-
-JOIN users
-  ON projects.created_by = users.id
-
+JOIN projects ON tasks.project_id = projects.id
+JOIN users ON projects.created_by = users.id
 WHERE tasks.assigned_to = ?
 AND tasks.status != 'done'
-
 ORDER BY tasks.created_at DESC
 `;
 
   db.query(sql, [userId], (err, result) => {
-    if (err) {
-      return res.status(500).json({
-        message: "Server Error",
-      });
-    }
-
+    if (err) return res.status(500).json({ message: "Server Error" });
     res.json(result);
   });
 };
@@ -56,7 +62,7 @@ const getAllTasks = (req, res) => {
   const userId = req.user.id;
 
   const sql = `
-    SELECT
+SELECT
   tasks.id,
   tasks.title,
   tasks.description,
@@ -65,19 +71,15 @@ const getAllTasks = (req, res) => {
   tasks.due_date,
   tasks.completed_at,
   projects.title AS project_name
-    FROM tasks
-    JOIN projects
-      ON tasks.project_id = projects.id
-    WHERE tasks.assigned_to = ?
-    AND tasks.status = 'done'
-    ORDER BY tasks.created_at DESC
-  `;
+FROM tasks
+JOIN projects ON tasks.project_id = projects.id
+WHERE tasks.assigned_to = ?
+AND tasks.status = 'done'
+ORDER BY tasks.created_at DESC
+`;
 
   db.query(sql, [userId], (err, result) => {
-    if (err) {
-      return res.status(500).json(err);
-    }
-
+    if (err) return res.status(500).json(err);
     res.json(result);
   });
 };
@@ -86,42 +88,70 @@ const getAllTasks = (req, res) => {
    PROJECT TASKS
 ========================= */
 const getProjectTasks = (req, res) => {
+  const role = req.user.role;
   const userId = req.user.id;
   const projectId = req.params.projectId;
 
-  const sql = `
-    SELECT
-      id,
-      title,
-      description,
-      priority,
-      status,
-      due_date
-    FROM tasks
-    WHERE assigned_to = ?
-    AND project_id = ?
-    ORDER BY created_at DESC
-  `;
+  let sql;
+  let params;
 
-  db.query(sql, [userId, projectId], (err, result) => {
-    if (err) {
-      return res.status(500).json(err);
-    }
+  // ADMIN → full access
+  if (role === "admin") {
+    sql = `
+      SELECT *
+      FROM tasks
+      WHERE project_id = ?
+      ORDER BY created_at DESC
+    `;
+    params = [projectId];
+  }
 
+  // PROJECT MANAGER → ONLY if member of project
+  else if (role === "project_manager") {
+    sql = `
+      SELECT t.*
+      FROM tasks t
+      WHERE t.project_id = ?
+      AND EXISTS (
+        SELECT 1
+        FROM project_members pm
+        WHERE pm.project_id = t.project_id
+        AND pm.user_id = ?
+      )
+      ORDER BY t.created_at DESC
+    `;
+    params = [projectId, userId];
+  }
+
+  // TEAM MEMBER → only assigned tasks
+  else {
+    sql = `
+      SELECT *
+      FROM tasks
+      WHERE project_id = ?
+      AND assigned_to = ?
+      ORDER BY created_at DESC
+    `;
+    params = [projectId, userId];
+  }
+
+  db.query(sql, params, (err, result) => {
+    if (err) return res.status(500).json(err);
     res.json(result);
   });
 };
-
 /* =========================
-   MARK TASK AS DONE (🔥 SOCKET ADDED)
+   MARK TASK AS DONE
 ========================= */
 const markTaskAsDone = (req, res) => {
+  const io = req.app.get("io");
   const taskId = req.params.id;
   const userId = req.user.id;
+  const role = req.user.role;
 
   db.query(
     `
-    SELECT title, project_id
+    SELECT project_id, assigned_to, title
     FROM tasks
     WHERE id = ?
     `,
@@ -129,155 +159,152 @@ const markTaskAsDone = (req, res) => {
     (err, taskResult) => {
       if (err) return res.status(500).json(err);
 
+      if (!taskResult.length) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+
       const task = taskResult[0];
 
-      db.query(
-        `
-        UPDATE tasks
-SET
-  status = 'done',
-  completed_at = NOW()
-WHERE id = ?
-        `,
-        [taskId],
-        (err) => {
-          if (err) return res.status(500).json(err);
+      // 🔐 ADMIN → full access
+      if (role === "admin") {
+        return finishTask();
+      }
 
-          /* =========================
-             ACTIVITY LOG
-          ========================= */
-          db.query(
-            `
-            INSERT INTO activity_logs
-            (user_id, action, project_id, task_id)
-            VALUES (?, ?, ?, ?)
-            `,
-            [
-              userId,
-              `completed task "${task.title}"`,
-              task.project_id,
-              taskId,
-            ]
-          );
+      // 🔐 PROJECT MANAGER → must be member of project
+      if (role === "project_manager") {
+        db.query(
+          `
+          SELECT 1
+          FROM project_members
+          WHERE project_id = ?
+          AND user_id = ?
+          `,
+          [task.project_id, userId],
+          (err, check) => {
+            if (err) return res.status(500).json(err);
 
-          /* =========================
-             GET PROJECT MEMBERS
-          ========================= */
-          db.query(
-            `
-            SELECT user_id
-            FROM project_members
-            WHERE project_id = ?
-            `,
-            [task.project_id],
-            (err, members) => {
-              if (!err && members.length > 0) {
-                members.forEach((member) => {
-                  /* =========================
-                     SAVE NOTIFICATION
-                  ========================= */
-                  db.query(
-                    `
-                    INSERT INTO notifications (user_id, title)
-                    VALUES (?, ?)
-                    `,
-                    [
-                      member.user_id,
-                      `Task "${task.title}" was completed`,
-                    ]
-                  );
-
-                  /* =========================
-                     🔥 SOCKET REAL TIME
-                  ========================= */
-                  const io = req.app.get("io");
-
-                  io.to(`user_${member.user_id}`).emit("notification", {
-                    message: `Task "${task.title}" was completed`,
-                    type: "task_done",
-                    taskId,
-                    projectId: task.project_id,
-                    createdAt: new Date(),
-                  });
-                });
-                io.to("admins").emit("admin_notification", {
-  type: "task_done",
-  message: `Task "${task.title}" completed`,
-  createdAt: new Date(),
-});
-                
-              }
+            if (!check.length) {
+              return res.status(403).json({
+                message: "Not allowed",
+              });
             }
-          );
 
-          res.json({
-            message: "Task marked as done",
-          });
-        }
-      );
+            finishTask();
+          }
+        );
+        return;
+      }
+
+      // 🔐 NORMAL USER → only assigned user
+      if (task.assigned_to !== userId) {
+        return res.status(403).json({ message: "Not allowed" });
+      }
+
+      finishTask();
+
+      function finishTask() {
+        db.query(
+          `
+          UPDATE tasks
+          SET status = 'done',
+              completed_at = NOW()
+          WHERE id = ?
+          `,
+          [taskId],
+          (err) => {
+            if (err) return res.status(500).json(err);
+
+            res.json({ message: "Task marked as done" });
+          }
+        );
+      }
     }
   );
 };
-
 /* =========================
    START TASK
 ========================= */
 const startTask = (req, res) => {
   const taskId = req.params.id;
   const userId = req.user.id;
+  const role = req.user.role;
 
   db.query(
     `
-    SELECT title, project_id
+    SELECT project_id, assigned_to, title
     FROM tasks
     WHERE id = ?
     `,
     [taskId],
-    (err, taskResult) => {
+    (err, result) => {
       if (err) return res.status(500).json(err);
 
-      const task = taskResult[0];
+      if (!result.length) {
+        return res.status(404).json({ message: "Task not found" });
+      }
 
-      db.query(
-        `
-        UPDATE tasks
-        SET status = 'in_progress'
-        WHERE id = ?
-        `,
-        [taskId],
-        (err) => {
-          if (err) return res.status(500).json(err);
+      const task = result[0];
 
-          db.query(
-            `
-            INSERT INTO activity_logs
-            (user_id, action, project_id, task_id)
-            VALUES (?, ?, ?, ?)
-            `,
-            [
-              userId,
-              `started working on "${task.title}"`,
-              task.project_id,
-              taskId,
-            ]
-          );
+      // 🔐 ADMIN → full access
+      if (role === "admin") {
+        return updateTask();
+      }
 
-          res.json({
-            message: "Task started",
-          });
-        }
-      );
+      // 🔐 PROJECT MANAGER → must be project member
+      if (role === "project_manager") {
+        db.query(
+          `
+          SELECT 1
+          FROM project_members
+          WHERE project_id = ?
+          AND user_id = ?
+          `,
+          [task.project_id, userId],
+          (err, check) => {
+            if (err) return res.status(500).json(err);
+
+            if (!check.length) {
+              return res.status(403).json({
+                message: "Not allowed",
+              });
+            }
+
+            updateTask();
+          }
+        );
+        return;
+      }
+
+      // 🔐 NORMAL USER → only assigned user
+      if (task.assigned_to !== userId) {
+        return res.status(403).json({ message: "Not allowed" });
+      }
+
+      updateTask();
+
+      function updateTask() {
+        db.query(
+          `
+          UPDATE tasks
+          SET status = 'in_progress'
+          WHERE id = ?
+          `,
+          [taskId],
+          (err) => {
+            if (err) return res.status(500).json(err);
+
+            res.json({ message: "Task started" });
+          }
+        );
+      }
     }
   );
 };
+
 /* =========================
    ADMIN - GET ALL TASKS
 ========================= */
-
 const getAdminTasks = (req, res) => {
-
-  console.log("ADMIN TASKS ROUTE HIT");
-
   db.query(
     `
     SELECT
@@ -286,19 +313,12 @@ const getAdminTasks = (req, res) => {
       u.full_name AS assigned_user,
       u.avatar AS assigned_avatar
     FROM tasks t
-    LEFT JOIN projects p
-      ON t.project_id = p.id
-    LEFT JOIN users u
-      ON t.assigned_to = u.id
+    LEFT JOIN projects p ON t.project_id = p.id
+    LEFT JOIN users u ON t.assigned_to = u.id
     ORDER BY t.created_at DESC
     `,
     (err, result) => {
-
-      if (err) {
-        console.log(err);
-        return res.status(500).json(err);
-      }
-
+      if (err) return res.status(500).json(err);
       res.json(result);
     }
   );
@@ -307,7 +327,6 @@ const getAdminTasks = (req, res) => {
 /* =========================
    ADMIN - GET TASK BY ID
 ========================= */
-
 const getTaskById = (req, res) => {
   const taskId = req.params.id;
 
@@ -319,13 +338,10 @@ const getTaskById = (req, res) => {
     `,
     [taskId],
     (err, result) => {
-      if (err)
-        return res.status(500).json(err);
+      if (err) return res.status(500).json(err);
 
-      if (result.length === 0) {
-        return res.status(404).json({
-          message: "Task not found",
-        });
+      if (!result.length) {
+        return res.status(404).json({ message: "Task not found" });
       }
 
       res.json(result[0]);
@@ -334,9 +350,8 @@ const getTaskById = (req, res) => {
 };
 
 /* =========================
-   ADMIN - CREATE TASK
+   CREATE TASK
 ========================= */
-
 const createTask = (req, res) => {
   const {
     title,
@@ -348,48 +363,87 @@ const createTask = (req, res) => {
     assigned_to,
   } = req.body;
 
+  const userId = req.user.id;
+  const role = req.user.role;
+
+  const insertTask = () => {
+    db.query(
+      `
+      INSERT INTO tasks
+      (title, description, priority, status, due_date, project_id, assigned_to)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
+      `,
+      [
+        title,
+        description,
+        priority,
+        status,
+        due_date,
+        project_id,
+        assigned_to,
+      ],
+      (err, result) => {
+        if (err) return res.status(500).json(err);
+
+        res.json({
+          message: "Task created successfully",
+          taskId: result.insertId,
+        });
+      }
+    );
+  };
+
+ if (role === "project_manager") {
   db.query(
     `
-    INSERT INTO tasks
-    (
-      title,
-      description,
-      priority,
-      status,
-      due_date,
-      project_id,
-      assigned_to
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    SELECT 1
+    FROM project_members
+    WHERE project_id = ?
+    AND user_id = ?
     `,
-    [
-      title,
-      description,
-      priority,
-      status,
-      due_date,
-      project_id,
-      assigned_to,
-    ],
+    [project_id, userId],
     (err, result) => {
-      if (err)
-        return res.status(500).json(err);
+      if (err) return res.status(500).json(err);
 
-      res.json({
-        message: "Task created successfully",
-        taskId: result.insertId,
-      });
+      if (!result.length) {
+        return res.status(403).json({
+          message: "Not allowed in this project",
+        });
+      }
+
+      // 🔥 NEW CHECK (IMPORTANT)
+      db.query(
+        `
+        SELECT 1
+        FROM project_members
+        WHERE project_id = ?
+        AND user_id = ?
+        `,
+        [project_id, assigned_to],
+        (err, result2) => {
+          if (err) return res.status(500).json(err);
+
+          if (!result2.length) {
+            return res.status(403).json({
+              message: "Assigned user is not in this project",
+            });
+          }
+
+          insertTask();
+        }
+      );
     }
   );
+} else {
+  insertTask();
+}
 };
 
 /* =========================
-   ADMIN - UPDATE TASK
+   UPDATE TASK
 ========================= */
-
 const updateTask = (req, res) => {
   const taskId = req.params.id;
-
   const {
     title,
     description,
@@ -400,138 +454,187 @@ const updateTask = (req, res) => {
     assigned_to,
   } = req.body;
 
-  let completedAt = null;
+  const userId = req.user.id;
+  const role = req.user.role;
 
-  if (status === "done") {
-    completedAt = new Date();
-  }
+  const doUpdate = () => {
+    let completedAt = status === "done" ? new Date() : null;
 
-  db.query(
-    `
-    UPDATE tasks
-    SET
-      title = ?,
-      description = ?,
-      priority = ?,
-      status = ?,
-      due_date = ?,
-      project_id = ?,
-      assigned_to = ?,
-      completed_at = ?
-    WHERE id = ?
-    `,
-    [
-      title,
-      description,
-      priority,
-      status,
-      due_date,
-      project_id,
-      assigned_to,
-      completedAt,
-      taskId,
-    ],
-    (err) => {
-      if (err)
-        return res.status(500).json(err);
+    db.query(
+      `UPDATE tasks SET title=?, description=?, priority=?, status=?, due_date=?, project_id=?, assigned_to=?, completed_at=? WHERE id=?`,
+      [
+        title,
+        description,
+        priority,
+        status,
+        due_date,
+        project_id,
+        assigned_to,
+        completedAt,
+        taskId,
+      ],
+      (err) => {
+        if (err) return res.status(500).json(err);
+        res.json({ message: "Task updated successfully" });
+      }
+    );
+  };
 
-      res.json({
-        message: "Task updated successfully",
-      });
-    }
-  );
-};
+  if (role === "project_manager") {
+    checkProjectOwnership(project_id, userId, (err, allowed) => {
+      if (err) return res.status(500).json(err);
 
-/* =========================
-   ADMIN - DELETE TASK
-========================= */
+      if (!allowed) {
+        return res.status(403).json({ message: "Not allowed" });
+      }
 
-const deleteTask = (req, res) => {
-  const taskId = req.params.id;
-
-  db.query(
-    `
-    DELETE FROM tasks
-    WHERE id = ?
-    `,
-    [taskId],
-    (err) => {
-      if (err)
-        return res.status(500).json(err);
-
-      res.json({
-        message: "Task deleted successfully",
-      });
-    }
-  );
-};
-/* =========================
-   ADMIN FORM DATA
-========================= */
-
-const getTaskFormData = (req, res) => {
-
-  db.query(
-    `
-    SELECT id, title
-    FROM projects
-    ORDER BY title ASC
-    `,
-    (err, projects) => {
-
-      if (err)
-        return res.status(500).json(err);
-
+      // OPTIONAL: check assigned user in project
       db.query(
-        `
-        SELECT
-          id,
-          full_name,
-          role,
-          avatar
-        FROM users
-        ORDER BY full_name ASC
-        `,
-        (err, users) => {
+        `SELECT 1 FROM project_members WHERE project_id=? AND user_id=?`,
+        [project_id, assigned_to],
+        (err, r) => {
+          if (err) return res.status(500).json(err);
+          if (!r.length) {
+            return res.status(403).json({
+              message: "Assigned user not in project",
+            });
+          }
 
-          if (err)
-            return res.status(500).json(err);
-
-          res.json({
-            projects,
-            users,
-          });
+          doUpdate();
         }
       );
+    });
+  } else {
+    doUpdate();
+  }
+};
+
+/* =========================
+   DELETE TASK
+========================= */
+const deleteTask = (req, res) => {
+  const taskId = req.params.id;
+  const userId = req.user.id;
+  const role = req.user.role;
+
+  db.query(
+    `SELECT project_id FROM tasks WHERE id = ?`,
+    [taskId],
+    (err, result) => {
+      if (err) return res.status(500).json(err);
+
+      if (!result.length) {
+        return res.status(404).json({ message: "Task not found" });
+      }
+
+      const projectId = result[0].project_id;
+
+      const doDelete = () => {
+        db.query(`DELETE FROM tasks WHERE id = ?`, [taskId], (err) => {
+          if (err) return res.status(500).json(err);
+          res.json({ message: "Task deleted successfully" });
+        });
+      };
+
+      if (role === "project_manager") {
+        checkProjectOwnership(projectId, userId, (err, allowed) => {
+          if (err) return res.status(500).json(err);
+
+          if (!allowed) {
+            return res.status(403).json({
+              message: "Not allowed to delete task",
+            });
+          }
+
+          doDelete();
+        });
+      } else {
+        doDelete();
+      }
     }
   );
 };
+
+/* =========================
+   FORM DATA
+========================= */
+const getTaskFormData = (req, res) => {
+  db.query(`SELECT id, title FROM projects`, (err, projects) => {
+    if (err) return res.status(500).json(err);
+
+    db.query(
+      `SELECT id, full_name, role, avatar FROM users`,
+      (err, users) => {
+        if (err) return res.status(500).json(err);
+
+        res.json({ projects, users });
+      }
+    );
+  });
+};
+
 const getProjectAllTasks = (req, res) => {
   const projectId = req.params.projectId;
+  const userId = req.user.id;
+  const role = req.user.role;
 
-  const sql = `
-    SELECT
-      t.*,
-      u.full_name AS assigned_name,
-      u.avatar AS assigned_avatar
-    FROM tasks t
-    LEFT JOIN users u ON t.assigned_to = u.id
-    WHERE t.project_id = ?
-    ORDER BY t.created_at DESC
-  `;
+  let sql;
+  let params;
 
-  db.query(sql, [projectId], (err, result) => {
+  // ADMIN → full access
+  if (role === "admin") {
+    sql = `
+      SELECT t.*, u.full_name AS assigned_name, u.avatar AS assigned_avatar
+      FROM tasks t
+      LEFT JOIN users u ON t.assigned_to = u.id
+      WHERE t.project_id = ?
+      ORDER BY t.created_at DESC
+    `;
+    params = [projectId];
+  }
+
+  // PROJECT MANAGER → only if member
+  else if (role === "project_manager") {
+    sql = `
+      SELECT t.*, u.full_name AS assigned_name, u.avatar AS assigned_avatar
+      FROM tasks t
+      LEFT JOIN users u ON t.assigned_to = u.id
+      WHERE t.project_id = ?
+      AND EXISTS (
+        SELECT 1 FROM project_members pm
+        WHERE pm.project_id = t.project_id
+        AND pm.user_id = ?
+      )
+      ORDER BY t.created_at DESC
+    `;
+    params = [projectId, userId];
+  }
+
+  // TEAM MEMBER → only assigned
+  else {
+    sql = `
+      SELECT t.*, u.full_name AS assigned_name, u.avatar AS assigned_avatar
+      FROM tasks t
+      LEFT JOIN users u ON t.assigned_to = u.id
+      WHERE t.project_id = ?
+      AND t.assigned_to = ?
+      ORDER BY t.created_at DESC
+    `;
+    params = [projectId, userId];
+  }
+
+  db.query(sql, params, (err, result) => {
     if (err) return res.status(500).json(err);
     res.json(result);
   });
 };
+
 module.exports = {
   getMyTasks,
   getAllTasks,
   getProjectTasks,
   markTaskAsDone,
   startTask,
-
   getAdminTasks,
   getTaskById,
   createTask,

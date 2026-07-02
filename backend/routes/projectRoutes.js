@@ -8,7 +8,14 @@ const {
   getMyProjectTasks,
   getProjectMembers
 } = require("../controllers/projectController");
+const {
+  createProject,
+  updateProject,
+  deleteProject,
+  addProjectMember
+} = require("../controllers/projectController");
 
+const isProjectManager = require("../middleware/isProjectManager");
 /* =========================
    GET MY PROJECTS
 ========================= */
@@ -35,5 +42,31 @@ router.get(
   verifyToken,
   getProjectMembers
 );
+router.post(
+  "/",
+  verifyToken,
+  isProjectManager,
+  createProject
+);
 
+router.put(
+  "/:id",
+  verifyToken,
+  isProjectManager,
+  updateProject
+);
+
+router.delete(
+  "/:id",
+  verifyToken,
+  isProjectManager,
+  deleteProject
+);
+
+router.post(
+  "/:id/members",
+  verifyToken,
+
+  addProjectMember
+);
 module.exports = router;

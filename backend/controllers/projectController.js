@@ -6,6 +6,7 @@ const db = require("../config/db");
 
 const getMyProjects = (req, res) => {
   const userId = req.user.id;
+  const role = req.user.role;
 
   const status = req.query.status;
   const search = req.query.search;
@@ -37,16 +38,35 @@ const getMyProjects = (req, res) => {
 
   FROM projects
 
-  JOIN project_members
+  LEFT JOIN project_members
     ON projects.id = project_members.project_id
 
   LEFT JOIN tasks
     ON projects.id = tasks.project_id
 
-  WHERE project_members.user_id = ?
+  WHERE 1=1
 `;
 
-  const values = [userId];
+  const values = [];
+
+
+  if (role === "admin") {
+    // admin sheh krejt
+  } 
+  else if (role === "project_manager") {
+  sql += `
+    AND (
+      projects.created_by = ?
+      OR project_members.user_id = ?
+    )
+  `;
+  values.push(userId);
+  values.push(userId);
+}
+  else {
+    sql += ` AND project_members.user_id = ? `;
+    values.push(userId);
+  }
 
   if (status && status !== "all") {
     sql += ` AND projects.status = ? `;
@@ -54,41 +74,28 @@ const getMyProjects = (req, res) => {
   }
 
   if (search) {
+    sql += `
+      AND (
+        projects.title LIKE ?
+        OR projects.description LIKE ?
+      )
+    `;
+    values.push(`%${search}%`);
+    values.push(`%${search}%`);
+  }
+
   sql += `
-    AND (
-      projects.title LIKE ?
-      OR projects.description LIKE ?
-    )
+  GROUP BY
+    projects.id
+  ORDER BY projects.created_at DESC
   `;
 
-  values.push(`%${search}%`);
-  values.push(`%${search}%`);
-}
-
-sql += `
-  GROUP BY
-    projects.id,
-    projects.title,
-    projects.description,
-    projects.status,
-    projects.priority,
-    projects.created_at
-`;
-
-sql += `
-  ORDER BY projects.created_at DESC
-`;
-
   db.query(sql, values, (err, projects) => {
-    if (err) {
-      return res.status(500).json(err);
-    }
+    if (err) return res.status(500).json(err);
 
-    if (projects.length === 0) {
-      return res.json([]);
-    }
+    const projectIds = projects.map(p => p.id);
 
-    const projectIds = projects.map((p) => p.id);
+    if (projectIds.length === 0) return res.json([]);
 
     const membersSql = `
       SELECT
@@ -102,22 +109,20 @@ sql += `
     `;
 
     db.query(membersSql, [projectIds], (err, members) => {
-      if (err) {
-        return res.status(500).json(err);
-      }
+      if (err) return res.status(500).json(err);
 
-      const finalProjects = projects.map((project) => ({
+      const final = projects.map(project => ({
         ...project,
         members: members
-  .filter((m) => m.project_id === project.id)
-  .map((m) => ({
-    id: m.id,
-    name: m.full_name,
-    avatar: m.avatar,
-  })),
+          .filter(m => m.project_id === project.id)
+          .map(m => ({
+            id: m.id,
+            name: m.full_name,
+            avatar: m.avatar
+          }))
       }));
 
-      res.json(finalProjects);
+      res.json(final);
     });
   });
 };
@@ -189,30 +194,55 @@ const getProjectMembers = (req, res) => {
 
 const addProjectMember = (req, res) => {
   const projectId = req.params.id;
-  const { userId } = req.body;
+  const userId = req.body.userId;
 
-  const sql = `
-    INSERT INTO project_members (project_id, user_id)
-    VALUES (?, ?)
+  const creatorCheckSql = `
+    SELECT created_by
+    FROM projects
+    WHERE id = ?
   `;
 
-  db.query(sql, [projectId, userId], (err, result) => {
-    if (err) {
-      return res.status(500).json(err);
+  db.query(creatorCheckSql, [projectId], (err, result) => {
+    if (err) return res.status(500).json(err);
+
+    if (result.length === 0) {
+      return res.status(404).json({
+        message: "Project not found",
+      });
     }
 
-    // SOCKET IO
-    const io = req.app.get("io");
+    const project = result[0];
 
-    io.to(userId).emit("notification", {
-      _id: Date.now(),
-      message: "You were added to a new project",
-      fullMessage: "Manager has added you to a project",
-      isRead: false,
-    });
+    // ✅ FIXED PERMISSIONS
+    if (
+      req.user.role !== "admin" &&
+      req.user.role !== "project_manager"
+    ) {
+      return res.status(403).json({
+        message: "Not allowed to add members to this project",
+      });
+    }
 
-    res.json({
-      message: "Member added successfully",
+    const sql = `
+      INSERT INTO project_members (project_id, user_id)
+      VALUES (?, ?)
+    `;
+
+    db.query(sql, [projectId, userId], (err) => {
+      if (err) return res.status(500).json(err);
+
+      const io = req.app.get("io");
+
+      io.to(`user_${userId}`).emit("notification", {
+        _id: Date.now(),
+        message: "You were added to a new project",
+        fullMessage: "Manager has added you to a project",
+        isRead: false,
+      });
+
+      res.json({
+        message: "Member added successfully",
+      });
     });
   });
 };
@@ -474,36 +504,30 @@ const createProject = (req, res) => {
     due_date,
   } = req.body;
 
-  const createdBy = req.user.id;
+  const userId = req.user.id;
+  const role = req.user.role;
+
+  let createdBy = userId;
+
+  // project manager ose admin mund me kriju
+  if (role !== "admin" && role !== "project_manager") {
+    return res.status(403).json({
+      message: "No permission to create project"
+    });
+  }
 
   db.query(
     `
     INSERT INTO projects
-(
- title,
- description,
- status,
- priority,
- due_date,
- created_by
-)
-   VALUES (?, ?, ?, ?, ?, ?)
+    (title, description, status, priority, due_date, created_by)
+    VALUES (?, ?, ?, ?, ?, ?)
     `,
-    [
-      title,
-      description,
-      status,
-      priority,
-      due_date,
-      createdBy,
-    ],
+    [title, description, status, priority, due_date, createdBy],
     (err, result) => {
-      if (err)
-        return res.status(500).json(err);
+      if (err) return res.status(500).json(err);
 
       res.json({
-        message:
-          "Project created successfully",
+        message: "Project created successfully",
         projectId: result.insertId,
       });
     }
