@@ -6,7 +6,9 @@ const verifyToken = require("../middleware/authMiddleware");
 const {
   getMyProjects,
   getMyProjectTasks,
-  getProjectMembers
+  getProjectMembers,
+   getUsers,
+  getMyProjectDetails
 } = require("../controllers/projectController");
 const {
   createProject,
@@ -24,7 +26,20 @@ router.get(
   verifyToken,
   getMyProjects
 );
-
+router.get(
+  "/users",
+  verifyToken,
+  isProjectManager,
+  getUsers
+);
+/*============================
+      GET PM PROJECT DETAILS
+============================*/
+router.get(
+  "/:id",
+  verifyToken,
+  getMyProjectDetails
+);
 /* =========================
    GET MY TASKS IN PROJECT
 ========================= */
@@ -42,6 +57,7 @@ router.get(
   verifyToken,
   getProjectMembers
 );
+
 router.post(
   "/",
   verifyToken,

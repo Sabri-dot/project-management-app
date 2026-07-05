@@ -19,6 +19,16 @@ const getMyProjects = (req, res) => {
     projects.status,
     projects.priority,
 
+    COUNT(DISTINCT tasks.id) AS totalTasks,
+
+    SUM(
+      CASE
+        WHEN tasks.status = 'done'
+        THEN 1
+        ELSE 0
+      END
+    ) AS completedTasks,
+
     CASE
       WHEN COUNT(tasks.id) = 0 THEN 0
       ELSE ROUND(
@@ -495,6 +505,82 @@ const getProjectDetails = (
     }
   );
 };
+const getMyProjectDetails = (req, res) => {
+  const projectId = req.params.id;
+
+  db.query(
+    `
+    SELECT *
+    FROM projects
+    WHERE id = ?
+    `,
+    [projectId],
+    (err, projectResult) => {
+      if (err) return res.status(500).json(err);
+
+      if (projectResult.length === 0) {
+        return res.status(404).json({
+          message: "Project not found",
+        });
+      }
+
+      const project = projectResult[0];
+
+      db.query(
+        `
+        SELECT
+          t.*,
+          u.full_name,
+          u.avatar
+        FROM tasks t
+        LEFT JOIN users u
+          ON u.id = t.assigned_to
+        WHERE t.project_id = ?
+        `,
+        [projectId],
+        (err, tasks) => {
+          if (err) return res.status(500).json(err);
+
+          db.query(
+            `
+            SELECT
+              u.id,
+              u.full_name,
+              u.email,
+              u.role,
+              u.avatar
+            FROM project_members pm
+            JOIN users u
+              ON u.id = pm.user_id
+            WHERE pm.project_id = ?
+            `,
+            [projectId],
+            (err, members) => {
+              if (err) return res.status(500).json(err);
+
+              const total = tasks.length;
+              const done = tasks.filter(
+                (t) => t.status === "done"
+              ).length;
+
+              const progress =
+                total > 0
+                  ? Math.round((done / total) * 100)
+                  : 0;
+
+              res.json({
+                ...project,
+                progress,
+                tasks,
+                members,
+              });
+            }
+          );
+        }
+      );
+    }
+  );
+};
 const createProject = (req, res) => {
   const {
     title,
@@ -616,6 +702,31 @@ const deleteProject = (req, res) => {
   );
 };
 /* =========================
+   GET USERS (PROJECT MANAGER)
+========================= */
+
+const getUsers = (req, res) => {
+  db.query(
+    `
+    SELECT
+      id,
+      full_name,
+      email,
+      avatar,
+      role
+    FROM users
+    ORDER BY full_name
+    `,
+    (err, result) => {
+      if (err) {
+        return res.status(500).json(err);
+      }
+
+      res.json(result);
+    }
+  );
+};
+/* =========================
    EXPORTS
 ========================= */
 
@@ -623,6 +734,7 @@ module.exports = {
   getMyProjects,
   getMyProjectTasks,
   getProjectMembers,
+  getUsers,
   addProjectMember,
 
   getAllProjects,
@@ -631,4 +743,5 @@ module.exports = {
   updateProject,
   deleteProject,
   getProjectDetails,
+  getMyProjectDetails,
 };

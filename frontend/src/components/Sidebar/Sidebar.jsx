@@ -275,8 +275,24 @@ const [systemOpen, setSystemOpen] =
 
     </>
 
-  ) : (
+  ) : user?.role === "project_manager" ?  (
+  <>
+    <Link to="/pm/projects">
+      <MdFolder />
+      My Projects
+    </Link>
 
+    <Link to="/pm/tasks">
+      <MdTask />
+      My Tasks
+    </Link>
+
+    <Link to="/pm/profile">
+      <MdPerson />
+      Profile
+    </Link>
+  </>
+) : (
     <>
 
       <Link
