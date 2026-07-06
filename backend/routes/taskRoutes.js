@@ -13,7 +13,9 @@ const {
   markTaskAsDone,
   startTask,
    getProjectAllTasks,
-    createTask
+    createTask,
+    getProjectManagerAllTasks,
+    getTaskFormData
 } = require(
   "../controllers/taskController"
 );
@@ -22,13 +24,22 @@ router.get(
   verifyToken,
   getMyTasks
 );
+router.get(
+  "/project-manager/all",
+  verifyToken,
+  getProjectManagerAllTasks
+);
 
 router.get(
   "/all",
   verifyToken,
   getAllTasks
 );
-
+router.get(
+  "/form-data",
+  verifyToken,
+  getTaskFormData
+);
 router.get(
   "/project/:projectId",
   verifyToken,

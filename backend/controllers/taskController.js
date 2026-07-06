@@ -19,7 +19,39 @@ const checkProjectOwnership = (projectId, userId, callback) => {
     }
   );
 };
+const getProjectManagerAllTasks = (req, res) => {
+  const userId = req.user.id;
+  const role = req.user.role;
 
+  if (role !== "project_manager") {
+    return res.status(403).json({ message: "Not allowed" });
+  }
+
+  const sql = `
+    SELECT 
+      t.*,
+      p.title AS project_name,
+      u.full_name AS assigned_user,
+      u.avatar AS assigned_avatar
+    FROM tasks t
+    JOIN projects p ON t.project_id = p.id
+    LEFT JOIN users u ON t.assigned_to = u.id
+    WHERE 
+      p.created_by = ?
+      OR EXISTS (
+        SELECT 1 
+        FROM project_members pm
+        WHERE pm.project_id = t.project_id
+        AND pm.user_id = ?
+      )
+    ORDER BY t.created_at DESC
+  `;
+
+  db.query(sql, [userId, userId], (err, result) => {
+    if (err) return res.status(500).json(err);
+    res.json(result);
+  });
+};
 /* =========================
    MY TASKS (ACTIVE)
 ========================= */
@@ -106,23 +138,22 @@ const getProjectTasks = (req, res) => {
     params = [projectId];
   }
 
-  // PROJECT MANAGER → ONLY if member of project
   else if (role === "project_manager") {
-    sql = `
-      SELECT t.*
-      FROM tasks t
-      WHERE t.project_id = ?
-      AND EXISTS (
-        SELECT 1
-        FROM project_members pm
-        WHERE pm.project_id = t.project_id
-        AND pm.user_id = ?
-      )
-      ORDER BY t.created_at DESC
-    `;
-    params = [projectId, userId];
-  }
+  sql = `
+    SELECT t.*, u.full_name AS assigned_name, u.avatar AS assigned_avatar
+    FROM tasks t
+    LEFT JOIN users u ON t.assigned_to = u.id
+    WHERE t.project_id = ?
+    AND EXISTS (
+      SELECT 1 FROM projects p
+      WHERE p.id = t.project_id
+      AND p.created_by = ?
+    )
+    ORDER BY t.created_at DESC
+  `;
 
+  params = [projectId, userId];
+}
   // TEAM MEMBER → only assigned tasks
   else {
     sql = `
@@ -559,20 +590,52 @@ const deleteTask = (req, res) => {
    FORM DATA
 ========================= */
 const getTaskFormData = (req, res) => {
-  db.query(`SELECT id, title FROM projects`, (err, projects) => {
+  const userId = req.user.id;
+  const role = req.user.role;
+
+  let projectSql;
+  let projectParams;
+
+  if (role === "admin") {
+    projectSql = `SELECT id, title FROM projects`;
+    projectParams = [];
+  }
+
+  else if (role === "project_manager") {
+    projectSql = `
+      SELECT DISTINCT p.id, p.title
+      FROM projects p
+      LEFT JOIN project_members pm ON pm.project_id = p.id
+      WHERE p.created_by = ? OR pm.user_id = ?
+    `;
+    projectParams = [userId, userId];
+  }
+
+  else {
+    projectSql = `
+      SELECT p.id, p.title
+      FROM projects p
+      JOIN project_members pm ON pm.project_id = p.id
+      WHERE pm.user_id = ?
+    `;
+    projectParams = [userId];
+  }
+
+  db.query(projectSql, projectParams, (err, projects) => {
     if (err) return res.status(500).json(err);
 
-    db.query(
-      `SELECT id, full_name, role, avatar FROM users`,
-      (err, users) => {
-        if (err) return res.status(500).json(err);
+    const userSql = `
+      SELECT id, full_name, role, avatar
+      FROM users
+    `;
 
-        res.json({ projects, users });
-      }
-    );
+    db.query(userSql, (err, users) => {
+      if (err) return res.status(500).json(err);
+
+      res.json({ projects, users });
+    });
   });
 };
-
 const getProjectAllTasks = (req, res) => {
   const projectId = req.params.projectId;
   const userId = req.user.id;
@@ -642,4 +705,5 @@ module.exports = {
   deleteTask,
   getTaskFormData,
   getProjectAllTasks,
+   getProjectManagerAllTasks,
 };

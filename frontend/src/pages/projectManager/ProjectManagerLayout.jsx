@@ -1,11 +1,15 @@
-import { Outlet, useNavigate } from "react-router-dom";
+import {
+  Outlet,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import { useEffect } from "react";
 import Sidebar from "../../components/Sidebar/Sidebar";
 import Navbar from "../../components/Navbar/Navbar";
 
 function ProjectManagerLayout() {
   const navigate = useNavigate();
-
+   const location = useLocation();
   const user = JSON.parse(localStorage.getItem("user"));
 
   useEffect(() => {
@@ -23,7 +27,7 @@ function ProjectManagerLayout() {
       <Sidebar />
 
       <div className="flex-grow-1 bg-light">
-        <Navbar />
+       {location.pathname !== "/pm/tasks" && <Navbar />}
 
         <div className="p-4">
           <Outlet />
