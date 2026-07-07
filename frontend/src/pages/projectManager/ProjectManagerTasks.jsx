@@ -25,6 +25,10 @@ const [errorMessage, setErrorMessage] = useState("");
 const [editMode, setEditMode] = useState(false);
 const [editId, setEditId] = useState(null);
 
+const [showDeleteModal, setShowDeleteModal] = useState(false);
+const [deleteTaskId, setDeleteTaskId] = useState(null);
+
+
 const [formData, setFormData] = useState({
   title: "",
   description: "",
@@ -133,36 +137,63 @@ const handleCreateTask = async () => {
 
     fetchTasks();
   } catch (err) {
-    setErrorMessage(err.response?.data?.message || "Error saving task");
+   setErrorMessage(
+  err.response?.data?.message ||
+  (editMode
+    ? "You can only edit tasks from projects you created."
+    : "Unable to create task.")
+);
   }
 };
-const handleEdit = (task) => {
-  setFormData({
-    title: task.title,
-    description: task.description || "",
-    project_id: task.project_id,
-    assigned_to: task.assigned_to,
-    priority: task.priority,
-    status: task.status,
-    due_date: task.due_date ? task.due_date.split("T")[0] : "",
-  });
-
-  setEditId(task.id);
-  setEditMode(true);
-  setShowModal(true);
-};
-const handleDelete = async (id) => {
+const handleEdit = async (task) => {
   try {
-    await axios.delete(`http://localhost:5000/api/tasks/${id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    setFormData({
+      title: task.title,
+      description: task.description || "",
+      project_id: task.project_id,
+      assigned_to: task.assigned_to,
+      priority: task.priority,
+      status: task.status,
+      due_date: task.due_date
+        ? task.due_date.split("T")[0]
+        : "",
     });
 
-    setSuccessMessage("Task deleted successfully!");
-    fetchTasks();
+    setEditId(task.id);
+    setEditMode(true);
+    setShowModal(true);
   } catch (err) {
-    setErrorMessage("Error deleting task");
+    setErrorMessage(
+      err.response?.data?.message ||
+      "You are not allowed to edit this task."
+    );
+  }
+};
+const handleDelete = async () => {
+  try {
+    await axios.delete(
+      `http://localhost:5000/api/tasks/${deleteTaskId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    setShowDeleteModal(false);
+    setDeleteTaskId(null);
+
+    setSuccessMessage("Task deleted successfully!");
+
+    fetchTasks();
+
+  } catch (err) {
+    setShowDeleteModal(false);
+
+    setErrorMessage(
+      err.response?.data?.message ||
+      "You can only delete tasks you created."
+    );
   }
 };
  useEffect(() => {
@@ -292,9 +323,22 @@ useEffect(() => {
 
   <button
   className="btn px-4 fw-semibold"
-  onClick={() =>
-    setShowModal(true)
-  }
+  onClick={() => {
+  setEditMode(false);
+  setEditId(null);
+
+  setFormData({
+    title: "",
+    description: "",
+    project_id: "",
+    assigned_to: "",
+    priority: "medium",
+    status: "todo",
+    due_date: "",
+  });
+
+  setShowModal(true);
+}}
   style={{
     background: "#2563eb",
     color: "#fff",
@@ -585,7 +629,10 @@ useEffect(() => {
       onMouseLeave={(e) =>
         (e.currentTarget.style.transform = "scale(1)")
       }
-      onClick={() => handleDelete(task.id)}
+      onClick={() => {
+  setDeleteTaskId(task.id);
+  setShowDeleteModal(true);
+}}
     />
 
   </div>
@@ -628,9 +675,8 @@ useEffect(() => {
           >
 
             <h3 className="fw-bold mb-4">
-              Create Task
-            </h3>
-
+  {editMode ? "Edit Task" : "Create a New Task"}
+</h3>
             <div className="row">
 
               <div className="col-md-6 mb-3">
@@ -819,9 +865,21 @@ useEffect(() => {
 
               <button
                 className="btn btn-secondary"
-                onClick={() =>
-                  setShowModal(false)
-                }
+                onClick={() => {
+  setShowModal(false);
+  setEditMode(false);
+  setEditId(null);
+
+  setFormData({
+    title: "",
+    description: "",
+    project_id: "",
+    assigned_to: "",
+    priority: "medium",
+    status: "todo",
+    due_date: "",
+  });
+}}
               >
                 Cancel
               </button>
@@ -840,6 +898,99 @@ useEffect(() => {
         </div>
 
       )}
+
+      {showDeleteModal && (
+  <div
+    style={{
+      position: "fixed",
+      inset: 0,
+      background: "rgba(0,0,0,.55)",
+      backdropFilter: "blur(6px)",
+      zIndex: 99999,
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+    }}
+  >
+    <div
+      className="bg-white"
+      style={{
+        width: "460px",
+        borderRadius: "24px",
+        padding: "35px",
+        animation: "fadeIn .25s ease",
+      }}
+    >
+      <div
+        style={{
+          width: "70px",
+          height: "70px",
+          margin: "auto",
+          borderRadius: "50%",
+          background: "#fee2e2",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          fontSize: "34px",
+          color: "#dc2626",
+        }}
+      >
+        🗑️
+      </div>
+
+      <h3
+        className="fw-bold text-center mt-4"
+        style={{ color: "#111827" }}
+      >
+        Delete Task
+      </h3>
+
+      <p
+        className="text-center mt-3"
+        style={{
+          color: "#6b7280",
+          fontSize: "17px",
+          lineHeight: "28px",
+        }}
+      >
+        Are you sure you want to delete this task?
+        <br />
+        This action cannot be undone.
+      </p>
+
+      <div className="d-flex gap-3 mt-4">
+
+        <button
+          className="btn btn-light flex-fill"
+          style={{
+            height: "48px",
+            borderRadius: "12px",
+          }}
+          onClick={() => {
+            setShowDeleteModal(false);
+            setDeleteTaskId(null);
+          }}
+        >
+          Cancel
+        </button>
+
+        <button
+          className="btn flex-fill"
+          style={{
+            background: "#dc2626",
+            color: "white",
+            height: "48px",
+            borderRadius: "12px",
+          }}
+          onClick={handleDelete}
+        >
+          Delete
+        </button>
+
+      </div>
+    </div>
+  </div>
+)}
  
       </div>
 

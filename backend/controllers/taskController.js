@@ -400,19 +400,39 @@ const createTask = (req, res) => {
   const insertTask = () => {
     db.query(
       `
-      INSERT INTO tasks
-      (title, description, priority, status, due_date, project_id, assigned_to)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
+     INSERT INTO tasks
+(
+title,
+description,
+priority,
+status,
+due_date,
+project_id,
+assigned_to,
+created_by
+)
+VALUES
+(
+?,
+?,
+?,
+?,
+?,
+?,
+?,
+?
+)
       `,
       [
-        title,
-        description,
-        priority,
-        status,
-        due_date,
-        project_id,
-        assigned_to,
-      ],
+title,
+description,
+priority,
+status,
+due_date,
+project_id,
+assigned_to,
+userId
+],
       (err, result) => {
         if (err) return res.status(500).json(err);
 
@@ -510,34 +530,63 @@ const updateTask = (req, res) => {
       }
     );
   };
+if (role === "project_manager") {
 
-  if (role === "project_manager") {
-    checkProjectOwnership(project_id, userId, (err, allowed) => {
+  db.query(
+    `
+    SELECT created_by
+    FROM tasks
+    WHERE id = ?
+    `,
+    [taskId],
+    (err, result) => {
+
       if (err) return res.status(500).json(err);
 
-      if (!allowed) {
-        return res.status(403).json({ message: "Not allowed" });
+      if (!result.length) {
+        return res.status(404).json({
+          message: "Task not found",
+        });
       }
 
-      // OPTIONAL: check assigned user in project
+      if (result[0].created_by !== userId) {
+        return res.status(403).json({
+          message: "You can only edit tasks that you created.",
+        });
+      }
+
       db.query(
-        `SELECT 1 FROM project_members WHERE project_id=? AND user_id=?`,
+        `
+        SELECT 1
+        FROM project_members
+        WHERE project_id = ?
+        AND user_id = ?
+        `,
         [project_id, assigned_to],
         (err, r) => {
+
           if (err) return res.status(500).json(err);
+
           if (!r.length) {
             return res.status(403).json({
-              message: "Assigned user not in project",
+              message: "Assigned user is not in this project.",
             });
           }
 
           doUpdate();
+
         }
       );
-    });
-  } else {
-    doUpdate();
-  }
+
+    }
+  );
+
+}
+else {
+
+  doUpdate();
+
+}
 };
 
 /* =========================
@@ -568,20 +617,40 @@ const deleteTask = (req, res) => {
       };
 
       if (role === "project_manager") {
-        checkProjectOwnership(projectId, userId, (err, allowed) => {
-          if (err) return res.status(500).json(err);
 
-          if (!allowed) {
-            return res.status(403).json({
-              message: "Not allowed to delete task",
-            });
-          }
+  db.query(
+    `
+    SELECT created_by
+    FROM tasks
+    WHERE id = ?
+    `,
+    [taskId],
+    (err, taskResult) => {
 
-          doDelete();
+      if (err) return res.status(500).json(err);
+
+      if (!taskResult.length) {
+        return res.status(404).json({
+          message: "Task not found",
         });
-      } else {
-        doDelete();
       }
+
+      if (taskResult[0].created_by !== userId) {
+        return res.status(403).json({
+          message: "You can only delete tasks that you created.",
+        });
+      }
+
+      doDelete();
+
+    }
+  );
+
+} else {
+
+  doDelete();
+
+}
     }
   );
 };

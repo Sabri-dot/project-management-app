@@ -15,7 +15,9 @@ const {
    getProjectAllTasks,
     createTask,
     getProjectManagerAllTasks,
-    getTaskFormData
+    getTaskFormData,
+    updateTask,
+    deleteTask,
 } = require(
   "../controllers/taskController"
 );
@@ -49,6 +51,17 @@ router.post(
   "/",
   verifyToken,
   createTask
+);
+router.put(
+  "/:id",
+  verifyToken,
+  updateTask
+);
+
+router.delete(
+  "/:id",
+  verifyToken,
+  deleteTask
 );
 router.patch(
   "/:id/done",
