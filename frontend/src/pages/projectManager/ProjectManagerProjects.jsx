@@ -130,7 +130,7 @@ setCreating(true);
  await axios.post(
   `http://localhost:5000/api/projects/${projectId}/members`,
   {
-    user_id: userId,
+    userId: userId,
   },
   {
     headers: { Authorization: `Bearer ${token}` }
@@ -542,7 +542,7 @@ style={{
   >
     {project.members?.slice(0, 4).map((member, index) => (
       <img
-        key={member.id}
+        key={`${member.id}-${index}`}
         src={
           member.avatar ||
           "https://i.pravatar.cc/150"
