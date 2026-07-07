@@ -22,6 +22,7 @@ import ProjectManagerDashboard from "../pages/projectManager/ProjectManagerDashb
 import ProjectManagerProjects from "../pages/projectManager/ProjectManagerProjects";
 import ProjectManagerTasks from "../pages/projectManager/ProjectManagerTasks";
 import ProjectManagerDetails from "../pages/projectManager/ProjectManagerDetails";
+/*import ProjectManagerProfile from "../pages/projectManager/ProjectManagerProfile";*/
 function AppRoutes() {
   return (
     <BrowserRouter>
@@ -80,7 +81,7 @@ function AppRoutes() {
   <Route path="projects" element={<ProjectManagerProjects />} />
   <Route path="projects/:id" element={<ProjectManagerDetails />} />
   <Route path="tasks" element={<ProjectManagerTasks />} />
-  <Route path="profile" element={<Profile />} />
+  <Route path="profile" element={<Profile />}/>
 </Route>
       </Routes>
     </BrowserRouter>

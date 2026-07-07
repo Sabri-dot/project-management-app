@@ -287,7 +287,7 @@ const [systemOpen, setSystemOpen] =
       My Tasks
     </Link>
 
-    <Link to="/pm/profile">
+    <Link to="/profile">
       <MdPerson />
       Profile
     </Link>

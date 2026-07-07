@@ -36,9 +36,10 @@ function ProjectManagerLayout() {
   }
 
 
-  const hideLayout =
+ const hideLayout =
   location.pathname.startsWith("/pm/projects") ||
-  location.pathname.startsWith("/pm/project-details");
+  location.pathname.startsWith("/pm/project-details") ||
+  location.pathname.startsWith("/pm/tasks");
 
 
   return (
@@ -61,7 +62,7 @@ function ProjectManagerLayout() {
             <Navbar />
 
 
-            <div className="p-4">
+            <div>
 
               <Outlet />
 
