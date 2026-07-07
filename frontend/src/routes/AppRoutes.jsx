@@ -21,7 +21,6 @@ import ProjectManagerLayout from "../pages/projectManager/ProjectManagerLayout";
 import ProjectManagerDashboard from "../pages/projectManager/ProjectManagerDashboard";
 import ProjectManagerProjects from "../pages/projectManager/ProjectManagerProjects";
 import ProjectManagerTasks from "../pages/projectManager/ProjectManagerTasks";
-import ProjectManagerProfile from "../pages/projectManager/ProjectManagerProfile";
 import ProjectManagerDetails from "../pages/projectManager/ProjectManagerDetails";
 function AppRoutes() {
   return (
@@ -76,12 +75,12 @@ function AppRoutes() {
 <Route path="/admin/attachments" element={<AdminAttachments />} />
 <Route path="/admin/activity-logs" element={<AdminActivityLogs />} />
 <Route path="/admin/projects/:id"element={<AdminProjectDetails />}/>
-  <Route path="/pm" element={<ProjectManagerLayout />}>
+<Route path="/pm" element={<ProjectManagerLayout />}>
   <Route index element={<ProjectManagerDashboard />} />
   <Route path="projects" element={<ProjectManagerProjects />} />
   <Route path="projects/:id" element={<ProjectManagerDetails />} />
   <Route path="tasks" element={<ProjectManagerTasks />} />
-  <Route path="profile" element={<ProjectManagerProfile />} />
+  <Route path="profile" element={<Profile />} />
 </Route>
       </Routes>
     </BrowserRouter>
