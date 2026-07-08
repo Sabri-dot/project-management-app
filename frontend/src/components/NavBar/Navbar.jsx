@@ -90,21 +90,27 @@ useEffect(() => {
   /* =========================
      GET NOTIFICATIONS (HISTORY)
   ========================= */
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      const token = localStorage.getItem("token");
+ const fetchNotifications = async () => {
+  const token = localStorage.getItem("token");
 
-      const res = await fetch("http://localhost:5000/api/notifications", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+  const res = await fetch(
+    "http://localhost:5000/api/notifications",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
-      const data = await res.json();
-      setNotifications(data);
-    };
+  const data = await res.json();
 
-    fetchNotifications();
-  }, []);
+  console.log("MY NOTIFICATIONS:", data);
 
+  setNotifications(data);
+};
+useEffect(() => {
+  fetchNotifications();
+}, []);
   /* =========================
      SOCKET REALTIME
   ========================= */

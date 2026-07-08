@@ -196,12 +196,12 @@ const markTaskAsDone = (req, res) => {
 
       const task = taskResult[0];
 
-      // 🔐 ADMIN → full access
+      // ADMIN → full access
       if (role === "admin") {
         return finishTask();
       }
 
-      // 🔐 PROJECT MANAGER → must be member of project
+      //  PROJECT MANAGER → must be member of project
       if (role === "project_manager") {
         db.query(
           `
@@ -226,7 +226,7 @@ const markTaskAsDone = (req, res) => {
         return;
       }
 
-      // 🔐 NORMAL USER → only assigned user
+      //  NORMAL USER → only assigned user
       if (task.assigned_to !== userId) {
         return res.status(403).json({ message: "Not allowed" });
       }
@@ -243,10 +243,70 @@ const markTaskAsDone = (req, res) => {
           `,
           [taskId],
           (err) => {
-            if (err) return res.status(500).json(err);
+  if (err) return res.status(500).json(err);
+  console.log("ROLE:", role);
+  // Vetëm kur Team Member e përfundon task-un
+  if (role === "team_member") {
+    console.log("INSIDE TEAM MEMBER");
+    db.query(
+      `
+      SELECT created_by
+      FROM projects
+      WHERE id = ?
+      `,
+      [task.project_id],
+      (err, projectResult) => {
 
-            res.json({ message: "Task marked as done" });
-          }
+  console.log("PROJECT ERROR:", err);
+  console.log("PROJECT RESULT:", projectResult);
+
+  if (!err && projectResult.length) {
+
+    const managerId = projectResult[0].created_by;
+
+    console.log("MANAGER ID:", managerId);
+
+    db.query(
+      `
+      INSERT INTO notifications
+      (
+        user_id,
+        title
+      )
+      VALUES (?, ?)
+      `,
+      [
+        managerId,
+        `Task "${task.title}" has been marked as done`
+      ],
+      (err) => {
+        console.log("INSERT ERROR:", err);
+        console.log("INSERT OK");
+      }
+    );
+
+    io.to(`user_${managerId}`).emit("notification", {
+      message: `Task "${task.title}" has been marked as done`,
+      type: "task_done",
+      createdAt: new Date(),
+    });
+
+  }
+
+  res.json({
+    message: "Task marked as done",
+  });
+
+}
+    );
+
+    return;
+  }
+
+  res.json({
+    message: "Task marked as done",
+  });
+}
         );
       }
     }
