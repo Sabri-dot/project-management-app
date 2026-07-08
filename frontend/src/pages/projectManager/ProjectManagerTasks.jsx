@@ -1,4 +1,4 @@
-import { FaEdit, FaTrash } from "react-icons/fa";
+import { useLocation } from "react-router-dom";import { FaEdit, FaTrash } from "react-icons/fa";
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -27,6 +27,9 @@ const [editId, setEditId] = useState(null);
 
 const [showDeleteModal, setShowDeleteModal] = useState(false);
 const [deleteTaskId, setDeleteTaskId] = useState(null);
+
+const location = useLocation();
+const [highlightTask,setHighlightTask] = useState(null);
 
 
 const [formData, setFormData] = useState({
@@ -200,6 +203,25 @@ const handleDelete = async () => {
   fetchTasks();
   fetchFormData();
 }, []);
+
+useEffect(() => {
+
+  if (location.state?.highlightTask) {
+
+    setHighlightTask(
+      Number(location.state.highlightTask)
+    );
+
+    setTimeout(() => {
+
+      setHighlightTask(null);
+
+    }, 5000);
+
+  }
+
+}, [location]);
+
 
   useEffect(() => {
     const filtered =
@@ -458,7 +480,50 @@ useEffect(() => {
 
       {filteredTasks.map((task) => (
 
-        <tr key={task.id}>
+<tr
+  key={task.id}
+  style={{
+    transition: "all 0.4s ease",
+
+    background:
+      highlightTask === task.id
+        ? "#e0f2fe"
+        : "#ffffff",
+
+    transform:
+      highlightTask === task.id
+        ? "scale(1.015)"
+        : "scale(1)",
+
+    boxShadow:
+      highlightTask === task.id
+        ?
+        "0 10px 30px rgba(14,165,233,0.35)"
+        :
+        "none",
+
+    outline:
+      highlightTask === task.id
+        ?
+        "3px solid #0284c7"
+        :
+        "none",
+
+    position:"relative",
+
+    zIndex:
+      highlightTask === task.id
+        ? 5
+        : 1,
+
+    animation:
+      highlightTask === task.id
+        ?
+        "highlightTask 1.5s ease infinite"
+        :
+        "none"
+  }}
+>
  
        
           <td
@@ -996,5 +1061,31 @@ useEffect(() => {
 
   );
 }
+<style>
+{`
 
+@keyframes highlightTask {
+
+0% {
+
+background:#e0f2fe;
+
+}
+
+50% {
+
+background:#bae6fd;
+
+}
+
+100% {
+
+background:#e0f2fe;
+
+}
+
+}
+
+`}
+</style>
 export default ProjectManagerTasks;

@@ -9,6 +9,7 @@ const getMyNotifications = (req, res) => {
       id,
       user_id,
       title AS message,
+      task_id,
       is_read,
       created_at
     FROM notifications

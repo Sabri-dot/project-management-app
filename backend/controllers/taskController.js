@@ -269,16 +269,18 @@ const markTaskAsDone = (req, res) => {
     db.query(
       `
       INSERT INTO notifications
-      (
-        user_id,
-        title
-      )
-      VALUES (?, ?)
+(
+ user_id,
+ title,
+ task_id
+)
+VALUES (?,?,?)
       `,
       [
-        managerId,
-        `Task "${task.title}" has been marked as done`
-      ],
+ managerId,
+ `Task "${task.title}" has been marked as done`,
+ taskId
+],
       (err) => {
         console.log("INSERT ERROR:", err);
         console.log("INSERT OK");

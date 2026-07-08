@@ -353,11 +353,21 @@ useEffect(() => {
             }}
           >
             <div
-              style={{ flex: 1, cursor: "pointer" }}
-              onClick={() => markAsRead(n.id)}
-            >
-              {n.message}
-            </div>
+  style={{ flex: 1, cursor: "pointer" }}
+  onClick={() => {
+    markAsRead(n.id);
+
+    navigate("/pm/tasks", {
+  state: {
+    highlightTask: n.task_id
+  }
+});
+
+    setNotifOpen(false);
+  }}
+>
+  {n.message}
+</div>
 
             <button
               onClick={() => deleteNotification(n.id)}
